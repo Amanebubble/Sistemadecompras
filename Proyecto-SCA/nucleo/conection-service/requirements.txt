@@ -1,0 +1,8 @@
+# Requerido para cuentas con protocolo "imap"
+imap-tools
+
+# Requerido solo si vas a usar cuentas con protocolo "gmail_oauth"
+# (si no vas a usar Gmail con OAuth2, podés omitir estas 3 lineas)
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib

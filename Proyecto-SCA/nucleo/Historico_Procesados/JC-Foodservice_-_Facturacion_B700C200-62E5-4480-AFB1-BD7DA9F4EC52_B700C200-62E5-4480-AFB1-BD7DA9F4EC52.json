@@ -1,0 +1,44 @@
+{
+  "metadatos_sistema": {
+    "codigo_generacion": "B700C200-62E5-4480-AFB1-BD7DA9F4EC52",
+    "sello_recepcion": "202630C1D048802E459486723340F9CD6943NDMM",
+    "numero_control": "DTE-03-M001P002-000000000011239",
+    "origen_datos": "JSON_NATIVO",
+    "cliente_asignado": "JC-Foodservice"
+  },
+  "datos_documento": {
+    "fecha_emision": "2026-07-08",
+    "tipo_documento": "03"
+  },
+  "datos_proveedor": {
+    "nrc": "857556",
+    "nit": "06142203951036",
+    "dui_sujeto_excluido": null,
+    "nombre_razon_social": "ESTACION DE SERVICIO LOS OLIVOS, S.A. DE C.V."
+  },
+  "datos_cliente": {
+    "nombre_razon_social": "JC FOODSRVICE, SOCIDAD POR ACCIONES SIMPLIFICADA DE C.V"
+  },
+  "detalle_financiero": {
+    "compras_sujetos_excluidos": 0.0,
+    "compras_exentas": {
+      "internas": 0.0,
+      "importaciones": 0.0
+    },
+    "compras_gravadas": {
+      "internas": 56.11,
+      "importaciones": 0.0
+    },
+    "iva_credito_fiscal": 7.29,
+    "iva_percibido": 0.0,
+    "impuestos_especificos": {
+      "fovial": 3.06,
+      "cotrans": 0.0,
+      "cesc": 1.53,
+      "impuestos_002": 0.0
+    },
+    "impuesto_retenido_terceros": 0.0,
+    "compras_no_sujetas": 0.0,
+    "total_compras": 68.0
+  }
+}

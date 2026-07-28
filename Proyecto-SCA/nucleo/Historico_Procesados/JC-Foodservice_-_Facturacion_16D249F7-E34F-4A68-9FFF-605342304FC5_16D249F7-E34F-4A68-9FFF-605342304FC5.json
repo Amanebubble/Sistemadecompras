@@ -1,0 +1,44 @@
+{
+  "metadatos_sistema": {
+    "codigo_generacion": "16D249F7-E34F-4A68-9FFF-605342304FC5",
+    "sello_recepcion": "2026C45D9CDBB6864142B22196FDAF7D1A88ZRIW",
+    "numero_control": "DTE-03-S139P009-000000000007609",
+    "origen_datos": "JSON_NATIVO",
+    "cliente_asignado": "JC-Foodservice"
+  },
+  "datos_documento": {
+    "fecha_emision": "2026-07-07",
+    "tipo_documento": "03"
+  },
+  "datos_proveedor": {
+    "nrc": "1937",
+    "nit": "06141101690011",
+    "dui_sujeto_excluido": null,
+    "nombre_razon_social": "CALLEJA, S.A. DE C.V."
+  },
+  "datos_cliente": {
+    "nombre_razon_social": "JC FOODSERVICE, SOCIEDAD POR ACCIONES SIMPLIFICADA DE CAPITAL VARIABLE"
+  },
+  "detalle_financiero": {
+    "compras_sujetos_excluidos": 0.0,
+    "compras_exentas": {
+      "internas": 0.0,
+      "importaciones": 0.0
+    },
+    "compras_gravadas": {
+      "internas": 186.76,
+      "importaciones": 0.0
+    },
+    "iva_credito_fiscal": 24.28,
+    "iva_percibido": 0.0,
+    "impuestos_especificos": {
+      "fovial": 0.0,
+      "cotrans": 0.0,
+      "cesc": 0.0,
+      "impuestos_002": 0.0
+    },
+    "impuesto_retenido_terceros": 0.0,
+    "compras_no_sujetas": 0.0,
+    "total_compras": 211.04
+  }
+}

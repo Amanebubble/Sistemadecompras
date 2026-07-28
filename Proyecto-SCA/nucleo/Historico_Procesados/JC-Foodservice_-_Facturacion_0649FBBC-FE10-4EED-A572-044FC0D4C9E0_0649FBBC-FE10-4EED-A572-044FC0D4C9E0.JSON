@@ -1,0 +1,44 @@
+{
+  "metadatos_sistema": {
+    "codigo_generacion": "0649FBBC-FE10-4EED-A572-044FC0D4C9E0",
+    "sello_recepcion": "20268133E76169994EA5B2A5C2A40E7EA6C5JYUZ",
+    "numero_control": "DTE-03-M001P001-000000000003559",
+    "origen_datos": "JSON_NATIVO",
+    "cliente_asignado": "JC-Foodservice"
+  },
+  "datos_documento": {
+    "fecha_emision": "2026-07-08",
+    "tipo_documento": "03"
+  },
+  "datos_proveedor": {
+    "nrc": "36412",
+    "nit": "06140101850027",
+    "dui_sujeto_excluido": null,
+    "nombre_razon_social": "NEGOCIOS CAMYRAM, S.A. DE C.V."
+  },
+  "datos_cliente": {
+    "nombre_razon_social": "JC FOODSERVICE, S.A.S. DE C.V."
+  },
+  "detalle_financiero": {
+    "compras_sujetos_excluidos": 0.0,
+    "compras_exentas": {
+      "internas": 0.0,
+      "importaciones": 0.0
+    },
+    "compras_gravadas": {
+      "internas": 209.45,
+      "importaciones": 0.0
+    },
+    "iva_credito_fiscal": 27.23,
+    "iva_percibido": 0.0,
+    "impuestos_especificos": {
+      "fovial": 0.0,
+      "cotrans": 0.0,
+      "cesc": 0.0,
+      "impuestos_002": 0.0
+    },
+    "impuesto_retenido_terceros": 0.0,
+    "compras_no_sujetas": 0.0,
+    "total_compras": 236.68
+  }
+}

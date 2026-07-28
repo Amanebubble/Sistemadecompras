@@ -1,0 +1,40 @@
+{
+  "metadatos_sistema": {
+    "codigo_generacion": "",
+    "sello_recepcion": "",
+    "numero_control": "",
+    "origen_datos": "JSON_NATIVO | EXTRACCION_PDF"
+  },
+  "datos_documento": {
+    "fecha_emision": "YYYY-MM-DD",
+    "tipo_documento": "03 | 01"
+  },
+  "datos_proveedor": {
+    "nrc": "",
+    "nit": "",
+    "dui_sujeto_excluido": null,
+    "nombre_razon_social": ""
+  },
+  "detalle_financiero": {
+    "compras_sujetos_excluidos": 0.00,
+    "compras_exentas": {
+      "internas": 0.00,
+      "importaciones": 0.00
+    },
+    "compras_gravadas": {
+      "internas": 0.00,
+      "importaciones": 0.00
+    },
+    "iva_credito_fiscal": 0.00,
+    "iva_percibido": 0.00,
+    "impuestos_especificos": {
+      "fovial": 0.00,
+      "cotrans": 0.00,
+      "cesc": 0.00,
+      "impuestos_002": 0.00
+    },
+    "impuesto_retenido_terceros": 0.00,
+    "compras_no_sujetas": 0.00,
+    "total_compras": 0.00
+  }
+}

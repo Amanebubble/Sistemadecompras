@@ -1,0 +1,44 @@
+{
+  "metadatos_sistema": {
+    "codigo_generacion": "2E50441E-EEF8-464D-9150-F84A206B8310",
+    "sello_recepcion": "202616CC560311B9452E865585E1D700315FXESU",
+    "numero_control": "DTE-03-M001P005-000000000011497",
+    "origen_datos": "JSON_NATIVO",
+    "cliente_asignado": "JC-Foodservice"
+  },
+  "datos_documento": {
+    "fecha_emision": "2026-07-14",
+    "tipo_documento": "03"
+  },
+  "datos_proveedor": {
+    "nrc": "2982698",
+    "nit": "06141401211041",
+    "dui_sujeto_excluido": null,
+    "nombre_razon_social": "FALBRI, S.A. DE C.V."
+  },
+  "datos_cliente": {
+    "nombre_razon_social": "JC FOODSERVICE, SA DE CV"
+  },
+  "detalle_financiero": {
+    "compras_sujetos_excluidos": 0.0,
+    "compras_exentas": {
+      "internas": 0.0,
+      "importaciones": 0.0
+    },
+    "compras_gravadas": {
+      "internas": 13.47,
+      "importaciones": 0.0
+    },
+    "iva_credito_fiscal": 1.75,
+    "iva_percibido": 0.0,
+    "impuestos_especificos": {
+      "fovial": 0.69,
+      "cotrans": 0.0,
+      "cesc": 0.34,
+      "impuestos_002": 0.0
+    },
+    "impuesto_retenido_terceros": 0.0,
+    "compras_no_sujetas": 0.0,
+    "total_compras": 16.25
+  }
+}

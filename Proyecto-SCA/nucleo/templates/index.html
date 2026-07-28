@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCA ETL Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism utility */
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Animated Gradient Text */
+        .text-gradient {
+            background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: shine 5s linear infinite;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.8);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 1);
+        }
+
+        /* Terminal output animation */
+        .terminal-output {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Button hover effects */
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease-out;
+            border-radius: 50%;
+        }
+        .btn-glow:hover::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .btn-glow:active {
+            transform: scale(0.98);
+        }
+
+        .pulse-dot {
+            position: relative;
+        }
+        .pulse-dot::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: inherit;
+            border-radius: 50%;
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border-left-color: #fff;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col items-center">
+
+    <!-- Header -->
+    <header class="w-full max-w-5xl glass rounded-2xl p-6 mb-8 flex justify-between items-center relative overflow-hidden">
+        <!-- Glow effect behind header -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-screen filter blur-[60px] opacity-20"></div>
+        
+        <div class="z-10">
+            <h1 class="text-3xl font-bold tracking-tight mb-1">
+                <span class="text-white">SCA</span> <span class="text-gradient">ETL Pipeline</span>
+            </h1>
+            <p class="text-slate-400 text-sm font-medium">Sistema de Contabilidad Automatizada</p>
+        </div>
+        
+        <div class="flex gap-4 z-10">
+            <!-- Stats Widgets -->
+            <div class="glass-card rounded-xl px-4 py-2 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-blue-400 pulse-dot"></div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Descarga-doc</p>
+                    <p class="text-lg font-bold text-white leading-tight" id="stat-descarga">...</p>
+                </div>
+            </div>
+            
+            <div class="glass-card rounded-xl px-4 py-2 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-rose-400 pulse-dot" style="animation-delay: 1s"></div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Revisión Manual</p>
+                    <p class="text-lg font-bold text-white leading-tight" id="stat-revision">...</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Action Panel -->
+        <div class="lg:col-span-4 flex flex-col gap-5">
+            <h2 class="text-lg font-semibold text-slate-200 ml-1 flex items-center gap-2">
+                <i data-feather="cpu" class="w-5 h-5 text-indigo-400"></i> Orquestador
+            </h2>
+            
+            <!-- Step 1 -->
+            <button onclick="runJob('conection')" id="btn-conection" class="glass-card btn-glow p-5 rounded-2xl flex flex-col gap-3 text-left w-full group">
+                <div class="flex justify-between items-start w-full">
+                    <div class="p-2.5 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 group-hover:text-blue-300 transition-colors">
+                        <i data-feather="download-cloud"></i>
+                    </div>
+                    <span id="status-conection" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400">Listo</span>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold text-lg">1. Descargar Correos</h3>
+                    <p class="text-slate-400 text-sm mt-1">Ejecuta conection-service para bajar adjuntos (PDF/JSON).</p>
+                </div>
+            </button>
+
+            <!-- Step 2 -->
+            <button onclick="runJob('filtro')" id="btn-filtro" class="glass-card btn-glow p-5 rounded-2xl flex flex-col gap-3 text-left w-full group">
+                <div class="flex justify-between items-start w-full">
+                    <div class="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-300 transition-colors">
+                        <i data-feather="filter"></i>
+                    </div>
+                    <span id="status-filtro" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400">Listo</span>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold text-lg">2. Filtrar y Procesar</h3>
+                    <p class="text-slate-400 text-sm mt-1">Deduplica, clasifica, extrae datos y estandariza JSONs.</p>
+                </div>
+            </button>
+
+            <!-- Step 3 -->
+            <button onclick="runJob('excel')" id="btn-excel" class="glass-card btn-glow p-5 rounded-2xl flex flex-col gap-3 text-left w-full group">
+                <div class="flex justify-between items-start w-full">
+                    <div class="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 group-hover:text-emerald-300 transition-colors">
+                        <i data-feather="file-text"></i>
+                    </div>
+                    <span id="status-excel" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400">Listo</span>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold text-lg">3. Generar Excel</h3>
+                    <p class="text-slate-400 text-sm mt-1">Agrupa por cliente y mes en mineria-finalizada/.</p>
+                </div>
+            </button>
+
+            <!-- Open Folder Action -->
+            <button onclick="openExplorer()" class="mt-4 p-4 rounded-xl border border-slate-700 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 transition-all flex items-center justify-center gap-2 text-slate-300 hover:text-white group cursor-pointer w-full">
+                <i data-feather="folder" class="w-5 h-5 group-hover:text-indigo-400 transition-colors"></i>
+                <span class="font-medium">Abrir Resultado Final</span>
+            </button>
+        </div>
+
+        <!-- Terminal Output Panel -->
+        <div class="lg:col-span-8 flex flex-col h-[600px]">
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                    <i data-feather="terminal" class="w-5 h-5 text-slate-400"></i> Salida de Consola
+                </h2>
+                <button onclick="clearTerminal()" class="text-xs text-slate-400 hover:text-white transition-colors">Limpiar</button>
+            </div>
+            
+            <div class="terminal-output flex-1 rounded-2xl p-4 overflow-y-auto relative shadow-2xl">
+                <!-- Mac like window controls -->
+                <div class="absolute top-4 left-4 flex gap-2">
+                    <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+                    <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+                </div>
+                
+                <div id="terminal" class="mt-8 text-sm text-slate-300 whitespace-pre-wrap font-mono leading-relaxed pb-4">
+                    <span class="text-indigo-400">root@sca</span>:<span class="text-blue-400">~</span>$ Iniciando panel de control...
+<span class="text-emerald-400">✓</span> Sistema listo. Esperando comandos.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Initialize feather icons
+        feather.replace();
+
+        // Fetch stats periodically
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                
+                // Animate change if different
+                updateCounter('stat-descarga', data.descarga_count);
+                updateCounter('stat-revision', data.revision_count);
+                
+                // Alert state for revision
+                const revBadge = document.getElementById('stat-revision').parentElement.parentElement;
+                if(data.revision_count > 0) {
+                    revBadge.style.borderColor = 'rgba(244, 63, 94, 0.4)';
+                    revBadge.style.boxShadow = '0 0 20px rgba(244, 63, 94, 0.15)';
+                } else {
+                    revBadge.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                    revBadge.style.boxShadow = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to fetch stats", e);
+            }
+        }
+
+        function updateCounter(id, newValue) {
+            const el = document.getElementById(id);
+            if(el.innerText !== newValue.toString()) {
+                el.style.opacity = 0;
+                setTimeout(() => {
+                    el.innerText = newValue;
+                    el.style.opacity = 1;
+                }, 200);
+            }
+        }
+
+        setInterval(updateStats, 3000);
+        updateStats();
+
+        // Terminal logic
+        const terminal = document.getElementById('terminal');
+        
+        function appendToTerminal(text, type='normal') {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric", second: "numeric" });
+            const span = document.createElement('span');
+            span.className = 'block mb-1';
+            
+            if(type === 'command') {
+                span.innerHTML = `<br><span class="text-indigo-400">root@sca</span>:<span class="text-blue-400">~</span>$ <span class="text-white">${text}</span>`;
+            } else if (type === 'error') {
+                span.innerHTML = `<span class="text-rose-400">[${time}] ERROR:</span> ${text}`;
+            } else if (type === 'success') {
+                span.innerHTML = `<span class="text-emerald-400">[${time}] SUCCESS:</span> Proceso finalizado.`;
+                const output = document.createElement('span');
+                output.className = 'block text-slate-400 mt-1';
+                output.textContent = text;
+                span.appendChild(output);
+            } else {
+                span.textContent = text;
+            }
+            
+            terminal.appendChild(span);
+            // Scroll to bottom
+            terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
+        }
+
+        function clearTerminal() {
+            terminal.innerHTML = '<span class="text-indigo-400">root@sca</span>:<span class="text-blue-400">~</span>$ Consola limpiada.\n';
+        }
+
+        // Job execution
+        async function runJob(jobId) {
+            const btn = document.getElementById(`btn-${jobId}`);
+            const status = document.getElementById(`status-${jobId}`);
+            
+            // Set Loading State
+            btn.disabled = true;
+            btn.classList.add('opacity-80', 'scale-[0.98]');
+            status.innerHTML = `<div class="spinner"></div>`;
+            status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center';
+            
+            appendToTerminal(`python run ${jobId}_service`, 'command');
+
+            try {
+                const res = await fetch(`/api/run/${jobId}`, { method: 'POST' });
+                const data = await res.json();
+                
+                if(data.success) {
+                    status.innerText = 'Éxito';
+                    status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400';
+                    appendToTerminal(data.output, 'success');
+                } else {
+                    status.innerText = 'Error';
+                    status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-rose-500/20 text-rose-400';
+                    appendToTerminal(data.output, 'error');
+                }
+            } catch(e) {
+                status.innerText = 'Error';
+                status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-rose-500/20 text-rose-400';
+                appendToTerminal(str(e), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-80', 'scale-[0.98]');
+                updateStats(); // Update immediately after job
+                
+                // Reset status after 5s
+                setTimeout(() => {
+                    status.innerText = 'Listo';
+                    status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400';
+                }, 5000);
+            }
+        }
+
+        async function openExplorer() {
+            try {
+                const res = await fetch('/api/open_explorer', { method: 'POST' });
+                const data = await res.json();
+                if(!data.success) {
+                    appendToTerminal(`Error al abrir explorador: ${data.error}`, 'error');
+                } else {
+                    appendToTerminal(`Directorio mineria-finalizada/ abierto en el explorador.`, 'command');
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "metadatos_sistema": {
+    "codigo_generacion": "C44697B7-C16D-4A6A-835B-5F5D4D0EAEC8",
+    "sello_recepcion": "202639CEEED6938D4FBC949CFCC2E840BB95XIYR",
+    "numero_control": "DTE-03-M001P001-000000000013629",
+    "origen_datos": "JSON_NATIVO",
+    "cliente_asignado": "JC-Foodservice"
+  },
+  "datos_documento": {
+    "fecha_emision": "2026-07-23",
+    "tipo_documento": "03"
+  },
+  "datos_proveedor": {
+    "nrc": "768910",
+    "nit": "06141612931024",
+    "dui_sujeto_excluido": null,
+    "nombre_razon_social": "Alimentos Congelados, S.A. de C.V."
+  },
+  "datos_cliente": {
+    "nombre_razon_social": "JC FOODSERVICE, SOCIEDAD POR ACCIONES SIMPLIFICADA DE C.V."
+  },
+  "detalle_financiero": {
+    "compras_sujetos_excluidos": 0.0,
+    "compras_exentas": {
+      "internas": 0.0,
+      "importaciones": 0.0
+    },
+    "compras_gravadas": {
+      "internas": 431.97,
+      "importaciones": 0.0
+    },
+    "iva_credito_fiscal": 56.16,
+    "iva_percibido": 0.0,
+    "impuestos_especificos": {
+      "fovial": 0.0,
+      "cotrans": 0.0,
+      "cesc": 0.0,
+      "impuestos_002": 0.0
+    },
+    "impuesto_retenido_terceros": 0.0,
+    "compras_no_sujetas": 0.0,
+    "total_compras": 488.13
+  }
+}

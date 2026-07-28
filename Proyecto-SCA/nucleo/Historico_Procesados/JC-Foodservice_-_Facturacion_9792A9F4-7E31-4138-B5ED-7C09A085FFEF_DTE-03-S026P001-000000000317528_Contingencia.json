@@ -1,0 +1,44 @@
+{
+  "metadatos_sistema": {
+    "codigo_generacion": "9792A9F4-7E31-4138-B5ED-7C09A085FFEF",
+    "sello_recepcion": "",
+    "numero_control": "DTE-03-S026P001-000000000317528",
+    "origen_datos": "JSON_NATIVO",
+    "cliente_asignado": "JC-Foodservice"
+  },
+  "datos_documento": {
+    "fecha_emision": "2026-07-15",
+    "tipo_documento": "03"
+  },
+  "datos_proveedor": {
+    "nrc": "5584",
+    "nit": "06143107620016",
+    "dui_sujeto_excluido": null,
+    "nombre_razon_social": "REPUESTOS DIDEA, S.A. DE C.V."
+  },
+  "datos_cliente": {
+    "nombre_razon_social": "JC FOODSERVICE, SOCIEDAD POR ACCIONES SIMPLIFICADA DE CAPITAL VARIABLE"
+  },
+  "detalle_financiero": {
+    "compras_sujetos_excluidos": 0.0,
+    "compras_exentas": {
+      "internas": 0.0,
+      "importaciones": 0.0
+    },
+    "compras_gravadas": {
+      "internas": 142.16,
+      "importaciones": 0.0
+    },
+    "iva_credito_fiscal": 18.48,
+    "iva_percibido": 0.0,
+    "impuestos_especificos": {
+      "fovial": 0.0,
+      "cotrans": 0.0,
+      "cesc": 0.0,
+      "impuestos_002": 0.0
+    },
+    "impuesto_retenido_terceros": 0.0,
+    "compras_no_sujetas": 0.0,
+    "total_compras": 160.64
+  }
+}

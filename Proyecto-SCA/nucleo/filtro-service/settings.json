@@ -1,0 +1,29 @@
+{
+    "carpeta_entrada": "Descarga-doc",
+    "carpeta_procesados": "nucleo/Procesados",
+    "carpeta_respaldo": "nucleo/Respaldo_PDF",
+    "carpeta_invalido": "nucleo/Invalidos",
+    "carpeta_error": "nucleo/Errores",
+    "carpeta_duplicados": "nucleo/Duplicados",
+    "otros_documentos": "Otros_Documentos_Clasificados",
+    "ruta_bd": "nucleo/filtro-service/filtro_dte.db",
+    "patron_uuid": "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}",
+    "campos_dte_esperados": ["identificacion", "emisor", "receptor"],
+    "palabras_clave_tipos_dte": [
+        "credito fiscal",
+        "comprobante de credito fiscal",
+        "factura",
+        "nota de credito",
+        "nota de debito",
+        "sujeto excluido",
+        "DTE",
+        "documento tributario"
+    ],
+    "codigos_tributos": {
+        "iva_13": "20",
+        "fovial": "D1",
+        "cotrans": "D4",
+        "cesc": "C8",
+        "impuestos_002": "59"
+    }
+}
