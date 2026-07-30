@@ -104,9 +104,17 @@ def generar_reportes_agrupados():
         df_exportar = grupo_df.drop(columns=["Ruta_Original"])
         
         try:
+            # Lógica para evitar sobrescritura (Concatenar si existe)
+            if ruta_excel.exists():
+                df_existente = pd.read_excel(str(ruta_excel))
+                df_exportar = pd.concat([df_existente, df_exportar], ignore_index=True)
+                accion = "Actualizado"
+            else:
+                accion = "Creado"
+
             df_exportar.to_excel(str(ruta_excel), index=False)
             archivos_generados += 1
-            print(f"  [OK] Exportado: {cliente}/{año}/{mes} -> compras_mineria.xlsx ({len(df_exportar)} filas)")
+            print(f"  [OK] {accion}: {cliente}/{año}/{mes} -> compras_mineria.xlsx ({len(df_exportar)} filas totales)")
             
             # Mover JSONs al histórico
             rutas_origen = grupo_df["Ruta_Original"].tolist()

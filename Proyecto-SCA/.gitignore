@@ -1,0 +1,60 @@
+# Entorno de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Configuraciones y Secretos (¡NO SUBIR!)
+.env
+client_secret_*.json
+token_*.json
+nucleo/conection-service/client_secret_*.json
+nucleo/conection-service/token_*.json
+nucleo/conection-service/credentials/
+
+# Datos Procesados y Carpetas de Trabajo
+Descarga-doc/*
+!Descarga-doc/.gitkeep
+nucleo/filtro_service/cola0/*
+!nucleo/filtro_service/cola0/.gitkeep
+nucleo/filtro_service/cola1/*
+!nucleo/filtro_service/cola1/.gitkeep
+nucleo/Procesados/*
+!nucleo/Procesados/.gitkeep
+nucleo/Respaldo_PDF/*
+!nucleo/Respaldo_PDF/.gitkeep
+nucleo/Revision_Manual/*
+!nucleo/Revision_Manual/.gitkeep
+nucleo/Otros_Documentos/*
+!nucleo/Otros_Documentos/.gitkeep
+nucleo/Invalidos/*
+!nucleo/Invalidos/.gitkeep
+nucleo/Duplicados/*
+!nucleo/Duplicados/.gitkeep
+nucleo/Historico_Procesados/*
+!nucleo/Historico_Procesados/.gitkeep
+Otros_Documentos_Clasificados/*
+!Otros_Documentos_Clasificados/.gitkeep
+mineria-finalizada/*
+!mineria-finalizada/.gitkeep
+
+# Logs y Archivos Temporales
+*.log
+log.csv
+nucleo/conection-service/log.csv
+nucleo/conversor0_json/registro_errores.log
+# Ignorar documentos de trabajo
+*.pdf
+*.json
+*.xlsx
+*.csv
+
+# Excepciones (archivos que sí queremos subir)
+!plantilla_dte.json
+!accounts.json
+!settings.json

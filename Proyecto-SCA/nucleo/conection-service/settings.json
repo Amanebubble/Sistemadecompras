@@ -2,19 +2,5 @@
   "carpeta_descargas": "Descarga-doc",
   "archivo_log": "log.csv",
   "reintentos_por_cuenta": 3,
-  "espera_entre_reintentos_segundos": 10,
-  "notificaciones": {
-    "email": {
-      "activo": false,
-      "smtp_servidor": "smtp.gmail.com",
-      "smtp_puerto": 587,
-      "usuario": "alertas@tudespacho.com",
-      "password_env": "NOTIF_EMAIL_PASSWORD",
-      "destinatarios": ["dueno@tudespacho.com"]
-    },
-    "slack": {
-      "activo": false,
-      "webhook_url_env": "SLACK_WEBHOOK_URL"
-    }
-  }
+  "espera_entre_reintentos_segundos": 10
 }

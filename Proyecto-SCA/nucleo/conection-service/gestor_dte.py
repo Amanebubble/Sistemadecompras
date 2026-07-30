@@ -71,11 +71,15 @@ class GestorDTE:
 
     def _es_json_dte_valido(self, contenido_bytes):
         try:
-            data = json.loads(contenido_bytes.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError):
+            data = json.loads(contenido_bytes.decode("utf-8-sig"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as e:
+            print(f"  [!] Archivo JSON rechazado por error de decodificación: {e}")
             return False, None
+        
         if all(campo in data for campo in self.campos_dte_esperados):
             return True, data
+            
+        print("  [!] Archivo JSON rechazado: No contiene la estructura DTE esperada (faltan campos clave).")
         return False, None
 
     @staticmethod
@@ -96,6 +100,7 @@ class GestorDTE:
             revisados += 1
 
             if not self._asunto_coincide(mensaje.asunto):
+                print(f"  [Omitido] Asunto no coincide: '{mensaje.asunto}'")
                 continue
 
             adjuntos = conector.obtener_adjuntos(mensaje)

@@ -2,7 +2,7 @@
 Punto de entrada del sistema.
 
 Flujo:
-  1. Lee settings.json (carpeta de descargas, reintentos, notificaciones).
+  1. Lee settings.json (carpeta de descargas, reintentos).
   2. Lee accounts.json (la lista de buzones a revisar).
   3. Para cada cuenta, resuelve la contraseña desde una variable de
      entorno (nunca queda escrita en accounts.json).
@@ -12,8 +12,7 @@ Flujo:
      y descargar los DTE, sin importarle qué protocolo hay detrás.
   6. Si una cuenta falla, se reintenta automáticamente (con espera
      entre intentos). Si sigue fallando después de agotar los
-     reintentos, se envía una notificación (correo y/o Slack, según
-     settings.json) y se continúa con las demás cuentas.
+     reintentos, se imprime un error y se continúa con las demás cuentas.
 
 Para agregar una cuenta nueva: solo hay que agregar un bloque más en
 accounts.json y definir su variable de entorno con la contraseña. No
@@ -30,7 +29,6 @@ RAIZ_PROYECTO = Path(__file__).resolve().parent.parent.parent
 
 from conectores import crear_conector
 from gestor_dte import GestorDTE
-from notificador import notificar_error
 
 ARCHIVO_CUENTAS = "accounts.json"
 ARCHIVO_SETTINGS = "settings.json"
@@ -104,11 +102,6 @@ def procesar_cuenta_con_reintentos(config_cuenta, settings):
         f"Último error: {ultimo_error}"
     )
     print(f"  {mensaje}")
-    notificar_error(
-        settings,
-        asunto=f"[Sistema DTE] Falló la cuenta '{nombre}'",
-        mensaje=mensaje,
-    )
     return None
 
 

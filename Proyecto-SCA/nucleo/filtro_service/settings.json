@@ -1,0 +1,14 @@
+{
+    "carpeta_entrada": "Descarga-doc",
+    "carpeta_cola0": "nucleo/filtro_service/cola0",
+    "carpeta_cola1": "nucleo/filtro_service/cola1",
+    "carpeta_respaldo": "nucleo/Respaldo_PDF",
+    "carpeta_invalido": "nucleo/Invalidos",
+    "carpeta_error": "nucleo/Errores",
+    "carpeta_duplicados": "nucleo/Duplicados",
+    "carpeta_otros": "nucleo/Otros_Documentos",
+    "ruta_bd": "nucleo/control_dte.db",
+    "patron_uuid": "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}",
+    "campos_dte_esperados": ["identificacion", "emisor", "receptor"],
+    "tipos_dte_validos": ["03", "05", "06", "14"]
+}

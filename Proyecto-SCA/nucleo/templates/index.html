@@ -3,391 +3,1132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCA ETL Dashboard</title>
+    <title>SCA Dashboard | Antigravity</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        dark: {
+                            900: '#0B0F19',
+                            800: '#111827',
+                            700: '#1F2937',
+                            card: 'rgba(31, 41, 55, 0.7)',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #0b0f19;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
-            background-attachment: fixed;
-            color: #e2e8f0;
-            min-height: 100vh;
+            background-color: #0B0F19;
+            color: #F3F4F6;
+            overflow-x: hidden;
         }
-
-        /* Glassmorphism utility */
-        .glass {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
-
+        
         .glass-card {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
+            background: linear-gradient(145deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.8) 100%);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
+        
         .glass-card:hover {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px -10px rgba(139, 92, 246, 0.2);
+            transform: translateY(-4px);
+            border-color: rgba(45, 212, 191, 0.3);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px rgba(45, 212, 191, 0.1);
         }
-
-        /* Animated Gradient Text */
-        .text-gradient {
-            background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 200% auto;
-            animation: shine 5s linear infinite;
-        }
-
-        @keyframes shine {
-            to {
-                background-position: 200% center;
-            }
-        }
-
+        
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 1);
+            background: #111827; 
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(71, 85, 105, 0.8);
+            background: #374151; 
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(100, 116, 139, 1);
+            background: #4B5563; 
         }
 
-        /* Terminal output animation */
-        .terminal-output {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Button hover effects */
-        .btn-glow {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .btn-glow::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 300%;
-            height: 300%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
-            transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.5s ease-out;
-            border-radius: 50%;
-        }
-        .btn-glow:hover::after {
-            transform: translate(-50%, -50%) scale(1);
+        .gradient-text {
+            background: linear-gradient(to right, #2dd4bf, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
-        .btn-glow:active {
-            transform: scale(0.98);
-        }
-
-        .pulse-dot {
-            position: relative;
-        }
-        .pulse-dot::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: inherit;
-            border-radius: 50%;
-            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-            opacity: 0.7;
-        }
-
-        @keyframes ping {
-            75%, 100% {
-                transform: scale(2.5);
-                opacity: 0;
-            }
-        }
-
-        /* Loading spinner */
-        .spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border-left-color: #fff;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .console-output {
+            font-family: 'JetBrains Mono', monospace;
+            white-space: pre-wrap;
+            scrollbar-width: thin;
+            scrollbar-color: #4B5563 #111827;
         }
     </style>
 </head>
-<body class="p-4 md:p-8 flex flex-col items-center">
+<body class="antialiased min-h-screen relative font-sans selection:bg-brand-500 selection:text-white">
+    
+    <!-- Background Animated Blobs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-900/40 mix-blend-screen filter blur-[100px] opacity-70 animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-[35%] h-[35%] rounded-full bg-blue-900/30 mix-blend-screen filter blur-[100px] opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 mix-blend-screen filter blur-[120px] opacity-60 animate-blob animation-delay-4000"></div>
+    </div>
 
-    <!-- Header -->
-    <header class="w-full max-w-5xl glass rounded-2xl p-6 mb-8 flex justify-between items-center relative overflow-hidden">
-        <!-- Glow effect behind header -->
-        <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-screen filter blur-[60px] opacity-20"></div>
+    <!-- Main Content -->
+    <div class="relative z-10 container mx-auto px-4 py-10 max-w-7xl">
         
-        <div class="z-10">
-            <h1 class="text-3xl font-bold tracking-tight mb-1">
-                <span class="text-white">SCA</span> <span class="text-gradient">ETL Pipeline</span>
-            </h1>
-            <p class="text-slate-400 text-sm font-medium">Sistema de Contabilidad Automatizada</p>
-        </div>
-        
-        <div class="flex gap-4 z-10">
-            <!-- Stats Widgets -->
-            <div class="glass-card rounded-xl px-4 py-2 flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full bg-blue-400 pulse-dot"></div>
-                <div>
-                    <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Descarga-doc</p>
-                    <p class="text-lg font-bold text-white leading-tight" id="stat-descarga">...</p>
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-12 animate-fade-in">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-2">SCA <span class="gradient-text">Pipeline</span></h1>
+                <p class="text-gray-400 text-lg">Sistema de Compras Automatizado - Panel de Control</p>
+            </div>
+            <div class="mt-6 md:mt-0 flex space-x-4">
+                <button onclick="openAccountConfig()" class="glass-panel hover:bg-gray-800 text-gray-300 transition-colors px-5 py-2.5 rounded-lg flex items-center space-x-2 text-sm font-medium border border-brand-500/30 hover:border-brand-400/60">
+                    <i class="fa-solid fa-envelope-circle-check text-brand-400"></i>
+                    <span>Cuentas</span>
+                </button>
+                <button onclick="openExplorer()" class="glass-panel hover:bg-gray-800 text-gray-300 transition-colors px-5 py-2.5 rounded-lg flex items-center space-x-2 text-sm font-medium">
+                    <i class="fa-regular fa-folder-open text-brand-400"></i>
+                    <span>Abrir Minería</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Action Section -->
+        <section class="mb-14 animate-slide-up" style="animation-delay: 0.1s;">
+            <div class="glass-panel rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between overflow-hidden relative">
+                <!-- Decorative glow -->
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand-600/20 rounded-full blur-[80px]"></div>
+                
+                <div class="z-10 mb-6 md:mb-0 md:mr-8 max-w-2xl">
+                    <h2 class="text-2xl font-semibold mb-3 text-white flex items-center">
+                        <i class="fa-solid fa-bolt text-brand-400 mr-3"></i>
+                        Orquestador Automático
+                    </h2>
+                    <p class="text-gray-400">
+                        Ejecuta la cadena completa de ensamblaje en orden secuencial: 
+                        <span class="text-gray-300">Conexión IMAP &rarr; Enrutador &rarr; Conversor PDF &rarr; Estandarizador JSON &rarr; Excel Services</span>.
+                    </p>
+                </div>
+                
+                <div class="z-10 w-full md:w-auto">
+                    <button id="btnRunAll" onclick="runPipeline()" class="w-full relative group bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white shadow-[0_0_20px_rgba(45,212,191,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.5)] transition-all duration-300 px-8 py-4 rounded-xl font-bold text-lg overflow-hidden flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed">
+                        <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <i id="btnIcon" class="fa-solid fa-play"></i>
+                        <span id="btnText">Ejecutar Flujo Automático</span>
+                    </button>
                 </div>
             </div>
             
-            <div class="glass-card rounded-xl px-4 py-2 flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full bg-rose-400 pulse-dot" style="animation-delay: 1s"></div>
-                <div>
-                    <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Revisión Manual</p>
-                    <p class="text-lg font-bold text-white leading-tight" id="stat-revision">...</p>
+            <!-- Progress Bar (Hidden by default) -->
+            <div id="progressContainer" class="hidden mt-6 glass-panel rounded-xl p-6 animate-fade-in">
+                <div class="flex justify-between text-sm font-medium mb-3">
+                    <span id="progressText" class="text-brand-300 flex items-center">
+                        <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Procesando documentos...
+                    </span>
+                    <span class="text-gray-400 text-xs tracking-wider uppercase" id="progressModule">Iniciando...</span>
+                </div>
+                <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden border border-gray-700/50">
+                    <div class="bg-gradient-to-r from-brand-500 to-blue-500 h-2 rounded-full relative overflow-hidden transition-all duration-500 w-full">
+                        <div class="absolute inset-0 bg-white/20 w-full animate-[shimmer_2s_infinite]"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Grid -->
+        <section class="mb-14">
+            <h3 class="text-xl font-semibold mb-6 text-gray-200 flex items-center animate-slide-up" style="animation-delay: 0.2s;">
+                <i class="fa-solid fa-chart-pie text-blue-400 mr-3"></i> Estado de Carpetas (Pipeline)
+                <button onclick="updateStats()" class="ml-4 text-sm text-gray-500 hover:text-brand-400 transition-colors" title="Actualizar">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+            </h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-slide-up" style="animation-delay: 0.3s;">
+                
+                <!-- Descargas -->
+                <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-inbox text-5xl text-blue-400"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-400 mb-1">Entrada</p>
+                    <p class="text-xs text-gray-500 mb-3 truncate">Descarga-doc</p>
+                    <div class="flex items-end space-x-2">
+                        <span class="text-3xl font-bold text-white" id="stat-descarga">-</span>
+                        <span class="text-xs text-gray-500 mb-1">archivos</span>
+                    </div>
+                </div>
+
+                <!-- Cola1 (PDF) -->
+                <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-file-pdf text-5xl text-red-400"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-400 mb-1">Cola PDF</p>
+                    <p class="text-xs text-gray-500 mb-3 truncate">cola1 (Nivel 1)</p>
+                    <div class="flex items-end space-x-2">
+                        <span class="text-3xl font-bold text-white" id="stat-cola1">-</span>
+                        <span class="text-xs text-gray-500 mb-1">archivos</span>
+                    </div>
+                </div>
+
+                <!-- Cola0 (JSON) -->
+                <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-file-code text-5xl text-yellow-400"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-400 mb-1">Cola JSON</p>
+                    <p class="text-xs text-gray-500 mb-3 truncate">cola0 (Nivel 0)</p>
+                    <div class="flex items-end space-x-2">
+                        <span class="text-3xl font-bold text-white" id="stat-cola0">-</span>
+                        <span class="text-xs text-gray-500 mb-1">archivos</span>
+                    </div>
+                </div>
+
+                <!-- Procesados -->
+                <div class="glass-card rounded-xl p-5 relative overflow-hidden group border-brand-500/20">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-check-circle text-5xl text-brand-400"></i>
+                    </div>
+                    <p class="text-sm font-medium text-brand-300 mb-1">Éxito</p>
+                    <p class="text-xs text-gray-500 mb-3 truncate">Procesados</p>
+                    <div class="flex items-end space-x-2">
+                        <span class="text-3xl font-bold text-white" id="stat-procesados">-</span>
+                        <span class="text-xs text-gray-500 mb-1">archivos</span>
+                    </div>
+                </div>
+
+                <!-- Respaldo PDF -->
+                <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-boxes-packing text-5xl text-purple-400"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-400 mb-1">Backup</p>
+                    <p class="text-xs text-gray-500 mb-3 truncate">Respaldo_PDF</p>
+                    <div class="flex items-end space-x-2">
+                        <span class="text-3xl font-bold text-white" id="stat-respaldo">-</span>
+                        <span class="text-xs text-gray-500 mb-1">archivos</span>
+                    </div>
+                </div>
+
+                <!-- Revisión Manual -->
+                <div class="glass-card rounded-xl p-5 relative overflow-hidden group border-orange-500/20 cursor-pointer hover:bg-orange-900/10" onclick="openReviewStation()">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-triangle-exclamation text-5xl text-orange-400"></i>
+                    </div>
+                    <p class="text-sm font-medium text-orange-300 mb-1">Atención</p>
+                    <p class="text-xs text-gray-500 mb-3 truncate">Revision_Manual</p>
+                    <div class="flex items-end space-x-2">
+                        <span class="text-3xl font-bold text-white" id="stat-revision">-</span>
+                        <span class="text-xs text-gray-500 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">archivos (Clic)</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Visual Console -->
+        <section class="animate-slide-up" style="animation-delay: 0.4s;">
+            <h3 class="text-xl font-semibold mb-4 text-gray-200 flex items-center">
+                <i class="fa-solid fa-terminal text-gray-400 mr-3"></i> Consola de Resultados
+            </h3>
+            
+            <!-- Result Alerts Container -->
+            <div id="alertContainer" class="mb-6 hidden">
+                <!-- Success Alert (Template) -->
+                <div id="successAlert" class="hidden glass-panel border-green-500/30 bg-green-900/10 p-5 rounded-xl border-l-4 border-l-green-500">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fa-solid fa-circle-check text-green-400 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-green-300">Pipeline completado exitosamente</h3>
+                            <p class="text-green-200/70 text-sm mt-1" id="successMsg">Todos los módulos se ejecutaron sin errores críticos.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Alert (Template) -->
+                <div id="errorAlert" class="hidden glass-panel border-red-500/40 bg-red-950/30 p-5 rounded-xl border-l-4 border-l-red-500 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-circle-xmark text-red-500 text-xl animate-pulse"></i>
+                        </div>
+                        <div class="ml-4 w-full">
+                            <h3 class="text-lg font-bold text-red-400">Falla en la ejecución del Pipeline</h3>
+                            <div class="mt-3 bg-red-950/50 rounded p-3 border border-red-900/50">
+                                <p class="text-sm font-semibold text-red-300 mb-1">Módulo afectado: <span id="errorModule" class="font-mono bg-red-900/50 px-2 py-0.5 rounded text-red-200">unknown</span></p>
+                                <p class="text-sm text-red-200/80 mt-2 font-mono text-xs whitespace-pre-wrap max-h-32 overflow-y-auto" id="errorDetails">Detalles del error...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="glass-panel rounded-xl overflow-hidden border-t border-gray-700">
+                <div class="bg-gray-900/80 px-4 py-2 flex items-center border-b border-gray-800">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <div class="ml-4 text-xs text-gray-500 font-mono">sys.stdout</div>
+                </div>
+                <div class="p-5 h-80 overflow-y-auto bg-[#0a0a0a]" id="terminalScroll">
+                    <pre id="consoleOutput" class="console-output text-gray-300 text-sm leading-relaxed">Esperando ejecución...</pre>
+                </div>
+            </div>
+        </section>
+        
+    </div>
+
+    <!-- Modal de Configuración de Cuentas -->
+    <div id="accountConfigModal" class="fixed inset-0 z-50 bg-dark-900/95 backdrop-blur-md hidden items-center justify-center">
+        <div class="w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <header class="glass-panel rounded-t-2xl px-6 py-4 flex justify-between items-center border-b border-gray-700/50">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i class="fa-solid fa-envelope-circle-check text-brand-400 mr-3"></i>
+                    Gestión de Cuentas de Correo
+                </h2>
+                <button onclick="closeAccountConfig()" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </header>
+
+            <div class="glass-panel rounded-b-2xl overflow-y-auto flex-1">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-x divide-gray-700/30">
+
+                    <!-- Panel Izquierdo: Formulario -->
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-white mb-5 flex items-center">
+                            <i class="fa-solid fa-plus-circle text-brand-400 mr-2"></i> Agregar Nueva Cuenta
+                        </h3>
+                        <form id="accountForm" onsubmit="submitAccount(event)" class="space-y-4">
+
+                            <!-- Nombre empresa -->
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Nombre de Empresa / Cliente</label>
+                                <input type="text" id="acc_nombre" required placeholder="Ej. Transporte Ejecutivo Shalom"
+                                    class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 transition-colors">
+                            </div>
+
+                            <!-- Correo -->
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Correo Electrónico a Monitorear</label>
+                                <input type="email" id="acc_correo" required placeholder="facturacion@empresa.com"
+                                    class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 transition-colors">
+                            </div>
+
+                            <!-- Proveedor IMAP -->
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Proveedor IMAP</label>
+                                <select id="acc_proveedor" onchange="onProveedorChange()"
+                                    class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                    <option value="gmail">Gmail (imap.gmail.com)</option>
+                                    <option value="outlook">Outlook / Office 365</option>
+                                    <option value="yahoo">Yahoo Mail</option>
+                                    <option value="custom">Dominio Propio (Personalizado)</option>
+                                </select>
+                            </div>
+
+                            <!-- Campos de dominio propio (ocultos por defecto) -->
+                            <div id="customServerFields" class="hidden space-y-3 p-3 bg-gray-800/40 rounded-lg border border-gray-700/50">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1">Servidor IMAP</label>
+                                    <input type="text" id="acc_servidor_custom" placeholder="imap.tudominio.com"
+                                        class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1">Puerto</label>
+                                    <input type="number" id="acc_puerto_custom" value="993"
+                                        class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                            </div>
+
+                            <!-- Método de Autenticación -->
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-2">Método de Autenticación</label>
+                                <div class="flex space-x-4">
+                                    <label class="flex items-center space-x-2 cursor-pointer group">
+                                        <input type="radio" name="auth_method" value="password" checked onchange="onAuthMethodChange()"
+                                            class="w-4 h-4 text-brand-500 bg-gray-900 border-gray-600 focus:ring-brand-500 focus:ring-2">
+                                        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">
+                                            <i class="fa-solid fa-key text-yellow-400 mr-1"></i> Contraseña de App
+                                        </span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer group">
+                                        <input type="radio" name="auth_method" value="oauth2" onchange="onAuthMethodChange()"
+                                            class="w-4 h-4 text-brand-500 bg-gray-900 border-gray-600 focus:ring-brand-500 focus:ring-2">
+                                        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">
+                                            <i class="fa-brands fa-google text-red-400 mr-1"></i> OAuth2 (.json)
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Campo: Contraseña (visible por defecto) -->
+                            <div id="passwordField">
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Contraseña de Aplicación</label>
+                                <div class="relative">
+                                    <input type="password" id="acc_password" placeholder="xxxx-xxxx-xxxx-xxxx"
+                                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-brand-500 transition-colors pr-10">
+                                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                                        <i id="eyeIcon" class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-shield-halved mr-1"></i> Se almacena cifrada en variables de entorno.</p>
+                            </div>
+
+                            <!-- Campo: OAuth2 upload (oculto por defecto) -->
+                            <div id="oauthField" class="hidden">
+                                <label class="block text-xs font-medium text-gray-400 mb-1">Archivo de Credenciales OAuth2</label>
+                                <label class="w-full flex flex-col items-center px-4 py-6 bg-gray-900 rounded-lg border-2 border-dashed border-gray-600 hover:border-brand-500 cursor-pointer transition-colors group">
+                                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-500 group-hover:text-brand-400 transition-colors mb-2"></i>
+                                    <span id="oauthFileName" class="text-sm text-gray-400 group-hover:text-white transition-colors">Clic para seleccionar client_secret.json</span>
+                                    <input type="file" id="acc_credentials_file" accept=".json" class="hidden" onchange="onOAuthFileSelect(this)">
+                                </label>
+                            </div>
+
+                            <!-- Submit -->
+                            <button type="submit" id="btnAddAccount"
+                                class="w-full bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-brand-500/25 flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <span>Registrar Cuenta</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Panel Derecho: Lista de cuentas activas -->
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-white mb-5 flex items-center">
+                            <i class="fa-solid fa-list-check text-blue-400 mr-2"></i> Cuentas Activas
+                            <button onclick="loadAccountsList()" class="ml-auto text-xs text-gray-500 hover:text-brand-400 transition-colors">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </h3>
+                        <div id="accountsList" class="space-y-3">
+                            <div class="text-center py-10 text-gray-500">
+                                <i class="fa-solid fa-spinner fa-spin text-2xl mb-3"></i>
+                                <p class="text-sm">Cargando cuentas...</p>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Content Grid -->
-    <main class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <!-- Action Panel -->
-        <div class="lg:col-span-4 flex flex-col gap-5">
-            <h2 class="text-lg font-semibold text-slate-200 ml-1 flex items-center gap-2">
-                <i data-feather="cpu" class="w-5 h-5 text-indigo-400"></i> Orquestador
+    <!-- Estación de Revisión Manual (Modal Full Screen) -->
+    <div id="reviewStation" class="fixed inset-0 z-50 bg-dark-900/95 backdrop-blur-md hidden flex-col">
+        <header class="flex flex-col md:flex-row justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
+            <h2 class="text-xl font-bold text-white flex items-center mb-4 md:mb-0">
+                <i class="fa-solid fa-clipboard-check text-brand-400 mr-2"></i> Estación de Revisión Manual
             </h2>
             
-            <!-- Step 1 -->
-            <button onclick="runJob('conection')" id="btn-conection" class="glass-card btn-glow p-5 rounded-2xl flex flex-col gap-3 text-left w-full group">
-                <div class="flex justify-between items-start w-full">
-                    <div class="p-2.5 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 group-hover:text-blue-300 transition-colors">
-                        <i data-feather="download-cloud"></i>
-                    </div>
-                    <span id="status-conection" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400">Listo</span>
+            <div class="flex items-center space-x-3 bg-gray-800/50 rounded-lg p-1.5 border border-gray-700/50">
+                <button onclick="prevCase()" class="px-4 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-all flex items-center">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Anterior
+                </button>
+                <div class="px-3 py-1 bg-gray-900 rounded border border-gray-700 flex items-center justify-center min-w-[120px]">
+                    <span id="reviewCounter" class="text-brand-400 font-mono text-sm font-semibold">Cargando...</span>
                 </div>
-                <div>
-                    <h3 class="text-white font-semibold text-lg">1. Descargar Correos</h3>
-                    <p class="text-slate-400 text-sm mt-1">Ejecuta conection-service para bajar adjuntos (PDF/JSON).</p>
-                </div>
-            </button>
-
-            <!-- Step 2 -->
-            <button onclick="runJob('filtro')" id="btn-filtro" class="glass-card btn-glow p-5 rounded-2xl flex flex-col gap-3 text-left w-full group">
-                <div class="flex justify-between items-start w-full">
-                    <div class="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-300 transition-colors">
-                        <i data-feather="filter"></i>
-                    </div>
-                    <span id="status-filtro" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400">Listo</span>
-                </div>
-                <div>
-                    <h3 class="text-white font-semibold text-lg">2. Filtrar y Procesar</h3>
-                    <p class="text-slate-400 text-sm mt-1">Deduplica, clasifica, extrae datos y estandariza JSONs.</p>
-                </div>
-            </button>
-
-            <!-- Step 3 -->
-            <button onclick="runJob('excel')" id="btn-excel" class="glass-card btn-glow p-5 rounded-2xl flex flex-col gap-3 text-left w-full group">
-                <div class="flex justify-between items-start w-full">
-                    <div class="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 group-hover:text-emerald-300 transition-colors">
-                        <i data-feather="file-text"></i>
-                    </div>
-                    <span id="status-excel" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400">Listo</span>
-                </div>
-                <div>
-                    <h3 class="text-white font-semibold text-lg">3. Generar Excel</h3>
-                    <p class="text-slate-400 text-sm mt-1">Agrupa por cliente y mes en mineria-finalizada/.</p>
-                </div>
-            </button>
-
-            <!-- Open Folder Action -->
-            <button onclick="openExplorer()" class="mt-4 p-4 rounded-xl border border-slate-700 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 transition-all flex items-center justify-center gap-2 text-slate-300 hover:text-white group cursor-pointer w-full">
-                <i data-feather="folder" class="w-5 h-5 group-hover:text-indigo-400 transition-colors"></i>
-                <span class="font-medium">Abrir Resultado Final</span>
-            </button>
-        </div>
-
-        <!-- Terminal Output Panel -->
-        <div class="lg:col-span-8 flex flex-col h-[600px]">
-            <div class="flex items-center justify-between mb-3 px-1">
-                <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                    <i data-feather="terminal" class="w-5 h-5 text-slate-400"></i> Salida de Consola
-                </h2>
-                <button onclick="clearTerminal()" class="text-xs text-slate-400 hover:text-white transition-colors">Limpiar</button>
+                <button onclick="nextCase()" class="px-4 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-all flex items-center">
+                    Siguiente <i class="fa-solid fa-chevron-right ml-2"></i>
+                </button>
             </div>
             
-            <div class="terminal-output flex-1 rounded-2xl p-4 overflow-y-auto relative shadow-2xl">
-                <!-- Mac like window controls -->
-                <div class="absolute top-4 left-4 flex gap-2">
-                    <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
-                    <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
-                    <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+            <div class="mt-4 md:mt-0 flex items-center">
+                <button onclick="closeReviewStation()" class="text-gray-300 hover:text-white px-4 py-2 rounded-lg bg-gray-800 hover:bg-red-500/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all border border-gray-700 flex items-center">
+                    <i class="fa-solid fa-xmark mr-2"></i> Volver al Dashboard
+                </button>
+            </div>
+        </header>
+        
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Lado Izquierdo: PDF Viewer -->
+            <div class="w-1/2 border-r border-gray-800 bg-black flex flex-col relative">
+                <div id="pdfOverlay" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10 hidden">
+                    <p class="text-gray-400 text-lg"><i class="fa-solid fa-file-circle-xmark mr-2 text-xl"></i>PDF no disponible para este JSON</p>
                 </div>
-                
-                <div id="terminal" class="mt-8 text-sm text-slate-300 whitespace-pre-wrap font-mono leading-relaxed pb-4">
-                    <span class="text-indigo-400">root@sca</span>:<span class="text-blue-400">~</span>$ Iniciando panel de control...
-<span class="text-emerald-400">✓</span> Sistema listo. Esperando comandos.
+                <iframe id="pdfViewer" class="w-full h-full" src=""></iframe>
+            </div>
+            
+            <!-- Lado Derecho: Formulario Dinámico -->
+            <div class="w-1/2 bg-gray-900/30 overflow-y-auto p-6">
+                <div class="max-w-2xl mx-auto">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-brand-300 mb-2">Completar Datos del DTE</h3>
+                        <p class="text-sm text-gray-400">Revisa el PDF y completa los campos marcados en rojo.</p>
+                    </div>
+                    
+                    <form id="revisionForm" onsubmit="event.preventDefault(); submitRevision();" class="space-y-5">
+                        
+                        <!-- Metadatos -->
+                        <div class="bg-gray-800/40 p-4 rounded-xl border border-gray-700/50">
+                            <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 border-b border-gray-700 pb-2">Metadatos e Identificadores</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Código de Generación (UUID)</label>
+                                    <input type="text" id="rev_codigoGeneracion" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Número de Control</label>
+                                    <input type="text" id="rev_numeroControl" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Sello de Recepción</label>
+                                    <input type="text" id="rev_selloRecibido" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-400 mb-1">Fecha Emisión (YYYY-MM-DD)</label>
+                                        <input type="text" id="rev_fecEmi" required placeholder="2026-04-09" class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-400 mb-1">Tipo DTE</label>
+                                        <select id="rev_tipoDte" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                            <option value="03" selected>03 - Comprobante de Crédito Fiscal</option>
+                                            <option value="05">05 - Nota de Crédito</option>
+                                            <option value="06">06 - Nota de Débito</option>
+                                            <option value="14">14 - Factura de Sujeto Excluido</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Proveedor -->
+                        <div class="bg-gray-800/40 p-4 rounded-xl border border-gray-700/50">
+                            <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 border-b border-gray-700 pb-2">Datos del Proveedor</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Nombre o Razón Social</label>
+                                    <input type="text" id="rev_nombre" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">NRC</label>
+                                    <input type="text" id="rev_nrc" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Finanzas -->
+                        <div class="bg-gray-800/40 p-4 rounded-xl border border-gray-700/50">
+                            <h4 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 border-b border-gray-700 pb-2">Finanzas</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Sub-Total ($)</label>
+                                    <input type="number" step="0.01" id="rev_subTotal" value="0.00" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">IVA 13% ($)</label>
+                                    <input type="number" step="0.01" id="rev_iva" value="0.00" required class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">1% Percibido ($)</label>
+                                    <input type="number" step="0.01" id="rev_ivaPercibido" value="0.00" class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">1% Retenido ($)</label>
+                                    <input type="number" step="0.01" id="rev_ivaRetenido" value="0.00" class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">FOVIAL ($)</label>
+                                    <input type="number" step="0.01" id="rev_fovial" value="0.00" class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">COTRANS ($)</label>
+                                    <input type="number" step="0.01" id="rev_cotrans" value="0.00" class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Otros / Exentos ($)</label>
+                                    <input type="number" step="0.01" id="rev_exentos" value="0.00" class="w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-brand-300 mb-1">Total General ($)</label>
+                                    <input type="number" step="0.01" id="rev_totalGeneral" value="0.00" required class="w-full bg-gray-900 border border-brand-500/50 rounded-md px-3 py-2 text-sm text-white font-bold shadow-[0_0_10px_rgba(45,212,191,0.1)] focus:outline-none focus:border-brand-400 transition-colors">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" id="btnReinject" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 px-8 rounded-lg shadow-[0_0_15px_rgba(20,184,166,0.4)] transition-all flex items-center">
+                                <i class="fa-solid fa-share-from-square mr-2"></i> Generar y Reinsertar
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
 
-    </main>
-
+    <!-- Scripts -->
     <script>
-        // Initialize feather icons
-        feather.replace();
+        // Variables globales
+        let statsIntervalId = null;
 
-        // Fetch stats periodically
-        async function updateStats() {
+        // Iniciar polling al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats(true); // Primera actualización con animación
+            startStatsPolling(); // Iniciar ciclo
+        });
+
+        function startStatsPolling() {
+            // Actualizar cada 2 segundos (2000 ms)
+            if (!statsIntervalId) {
+                statsIntervalId = setInterval(() => {
+                    updateStats(false);
+                }, 2000);
+            }
+        }
+
+        function updateStats(showPulse = false) {
+            const statIds = ['descarga', 'cola1', 'cola0', 'procesados', 'respaldo', 'revision'];
+            
+            if (showPulse) {
+                statIds.forEach(id => {
+                    const el = document.getElementById(`stat-${id}`);
+                    if(el) el.classList.add('animate-pulse', 'text-gray-500');
+                });
+            }
+
+            fetch('/api/stats')
+                .then(res => {
+                    if (!res.ok) throw new Error("HTTP error " + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById('stat-descarga').textContent = data.descarga_count;
+                    document.getElementById('stat-cola1').textContent = data.cola1_count;
+                    document.getElementById('stat-cola0').textContent = data.cola0_count;
+                    document.getElementById('stat-procesados').textContent = data.procesados_count;
+                    document.getElementById('stat-respaldo').textContent = data.respaldo_count;
+                    document.getElementById('stat-revision').textContent = data.revision_count;
+                    
+                    if (showPulse) {
+                        statIds.forEach(id => {
+                            const el = document.getElementById(`stat-${id}`);
+                            if(el) el.classList.remove('animate-pulse', 'text-gray-500');
+                        });
+                    }
+                })
+                .catch(err => {
+                    // Fallo silencioso para no romper la experiencia si el backend se reinicia
+                    console.debug("Polling de estadísticas falló en este ciclo:", err);
+                });
+        }
+
+        async function runPipeline() {
+            // UI State: Loading
+            const btn = document.getElementById('btnRunAll');
+            const icon = document.getElementById('btnIcon');
+            const text = document.getElementById('btnText');
+            const progress = document.getElementById('progressContainer');
+            const consoleOut = document.getElementById('consoleOutput');
+            
+            // Ocultar alertas previas
+            document.getElementById('alertContainer').classList.add('hidden');
+            document.getElementById('successAlert').classList.add('hidden');
+            document.getElementById('errorAlert').classList.add('hidden');
+
+            btn.disabled = true;
+            icon.className = 'fa-solid fa-circle-notch fa-spin';
+            text.textContent = 'Procesando... (Revisa los contadores)';
+            progress.classList.remove('hidden');
+            consoleOut.innerHTML = '<span class="text-gray-500">Iniciando orquestador...</span>\n';
+
             try {
-                const res = await fetch('/api/stats');
-                const data = await res.json();
+                const response = await fetch('/api/run/all', { method: 'POST' });
+                const data = await response.json();
                 
-                // Animate change if different
-                updateCounter('stat-descarga', data.descarga_count);
-                updateCounter('stat-revision', data.revision_count);
-                
-                // Alert state for revision
-                const revBadge = document.getElementById('stat-revision').parentElement.parentElement;
-                if(data.revision_count > 0) {
-                    revBadge.style.borderColor = 'rgba(244, 63, 94, 0.4)';
-                    revBadge.style.boxShadow = '0 0 20px rgba(244, 63, 94, 0.15)';
+                // Mostrar contenedor de alertas
+                document.getElementById('alertContainer').classList.remove('hidden');
+
+                if (data.success) {
+                    // Success UI
+                    document.getElementById('successAlert').classList.remove('hidden');
+                    consoleOut.innerHTML = escapeHtml(data.output || "Ejecución finalizada.");
                 } else {
-                    revBadge.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-                    revBadge.style.boxShadow = 'none';
+                    // Error UI
+                    document.getElementById('errorAlert').classList.remove('hidden');
+                    document.getElementById('errorModule').textContent = data.failed_module || 'Desconocido';
+                    
+                    // Extraer las últimas líneas de salida
+                    const outLines = (data.output || "").split('\n');
+                    const lastLines = outLines.slice(Math.max(outLines.length - 15, 0)).join('\n');
+                    document.getElementById('errorDetails').textContent = lastLines;
+                    
+                    consoleOut.innerHTML = escapeHtml(data.output || "Error desconocido.");
+                }
+            } catch (err) {
+                document.getElementById('alertContainer').classList.remove('hidden');
+                document.getElementById('errorAlert').classList.remove('hidden');
+                document.getElementById('errorModule').textContent = 'Network/Fetch';
+                document.getElementById('errorDetails').textContent = err.toString();
+                consoleOut.innerHTML = `<span class="text-red-400">Error de red: ${err.toString()}</span>`;
+            } finally {
+                // Restaurar botón a estado original
+                btn.disabled = false;
+                icon.className = 'fa-solid fa-play';
+                text.textContent = 'Ejecutar Flujo Automático';
+                progress.classList.add('hidden');
+                
+                // Hacer auto-scroll en la consola
+                const term = document.getElementById('terminalScroll');
+                term.scrollTop = term.scrollHeight;
+                
+                // Forzar una última actualización visual inmediata (con pulso)
+                updateStats(true);
+            }
+        }
+
+        function openExplorer() {
+            fetch('/api/open_explorer', { method: 'POST' })
+                .catch(err => console.debug("Explorador:", err));
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        // --- LÓGICA ESTACIÓN DE REVISIÓN MANUAL ---
+        let revisionCases = [];
+        let currentRevisionIndex = 0;
+
+        async function openReviewStation() {
+            document.getElementById('reviewStation').classList.remove('hidden');
+            document.getElementById('reviewStation').classList.add('flex');
+            
+            try {
+                const res = await fetch('/api/revision/list');
+                const data = await res.json();
+                revisionCases = data.casos || [];
+                currentRevisionIndex = 0;
+                
+                if (revisionCases.length === 0) {
+                    document.getElementById('reviewCounter').textContent = "No hay casos pendientes";
+                    document.getElementById('pdfOverlay').classList.remove('hidden');
+                    document.getElementById('pdfOverlay').innerHTML = '<p class="text-gray-400 text-lg"><i class="fa-solid fa-check-circle text-brand-400 mr-2 text-xl"></i>Todo limpio</p>';
+                    document.getElementById('revisionForm').reset();
+                } else {
+                    loadCase(currentRevisionIndex);
                 }
             } catch (e) {
-                console.error("Failed to fetch stats", e);
+                console.error("Error cargando casos:", e);
+                document.getElementById('reviewCounter').textContent = "Error de conexión";
             }
         }
 
-        function updateCounter(id, newValue) {
-            const el = document.getElementById(id);
-            if(el.innerText !== newValue.toString()) {
-                el.style.opacity = 0;
-                setTimeout(() => {
-                    el.innerText = newValue;
-                    el.style.opacity = 1;
-                }, 200);
-            }
+        function closeReviewStation() {
+            document.getElementById('reviewStation').classList.add('hidden');
+            document.getElementById('reviewStation').classList.remove('flex');
+            document.getElementById('pdfViewer').src = "";
+            updateStats();
         }
 
-        setInterval(updateStats, 3000);
-        updateStats();
-
-        // Terminal logic
-        const terminal = document.getElementById('terminal');
-        
-        function appendToTerminal(text, type='normal') {
-            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric", second: "numeric" });
-            const span = document.createElement('span');
-            span.className = 'block mb-1';
+        async function loadCase(index) {
+            if (index >= revisionCases.length) {
+                closeReviewStation();
+                return;
+            }
             
-            if(type === 'command') {
-                span.innerHTML = `<br><span class="text-indigo-400">root@sca</span>:<span class="text-blue-400">~</span>$ <span class="text-white">${text}</span>`;
-            } else if (type === 'error') {
-                span.innerHTML = `<span class="text-rose-400">[${time}] ERROR:</span> ${text}`;
-            } else if (type === 'success') {
-                span.innerHTML = `<span class="text-emerald-400">[${time}] SUCCESS:</span> Proceso finalizado.`;
-                const output = document.createElement('span');
-                output.className = 'block text-slate-400 mt-1';
-                output.textContent = text;
-                span.appendChild(output);
+            const caso = revisionCases[index];
+            document.getElementById('reviewCounter').textContent = `Caso ${index + 1} de ${revisionCases.length}`;
+            
+            // Cargar PDF
+            const pdfViewer = document.getElementById('pdfViewer');
+            const pdfOverlay = document.getElementById('pdfOverlay');
+            if (caso.pdf) {
+                pdfViewer.src = `/api/revision/file/${caso.pdf}#toolbar=0&navpanes=0&scrollbar=0`;
+                pdfOverlay.classList.add('hidden');
             } else {
-                span.textContent = text;
+                pdfViewer.src = "";
+                pdfOverlay.classList.remove('hidden');
+                pdfOverlay.innerHTML = '<p class="text-gray-400 text-lg"><i class="fa-solid fa-file-circle-xmark mr-2 text-xl"></i>PDF no disponible para este JSON</p>';
             }
             
-            terminal.appendChild(span);
-            // Scroll to bottom
-            terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
-        }
-
-        function clearTerminal() {
-            terminal.innerHTML = '<span class="text-indigo-400">root@sca</span>:<span class="text-blue-400">~</span>$ Consola limpiada.\n';
-        }
-
-        // Job execution
-        async function runJob(jobId) {
-            const btn = document.getElementById(`btn-${jobId}`);
-            const status = document.getElementById(`status-${jobId}`);
+            // Resetear y rellenar formulario dinámicamente extrayendo del JSON crudo si existe
+            document.getElementById('revisionForm').reset();
+            const inputs = document.querySelectorAll('#revisionForm input');
+            inputs.forEach(inp => {
+                inp.classList.remove('border-red-500', 'shadow-[0_0_10px_rgba(239,68,68,0.3)]');
+                inp.classList.add('border-gray-600');
+            });
             
-            // Set Loading State
-            btn.disabled = true;
-            btn.classList.add('opacity-80', 'scale-[0.98]');
-            status.innerHTML = `<div class="spinner"></div>`;
-            status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center';
-            
-            appendToTerminal(`python run ${jobId}_service`, 'command');
-
-            try {
-                const res = await fetch(`/api/run/${jobId}`, { method: 'POST' });
-                const data = await res.json();
-                
-                if(data.success) {
-                    status.innerText = 'Éxito';
-                    status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400';
-                    appendToTerminal(data.output, 'success');
-                } else {
-                    status.innerText = 'Error';
-                    status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-rose-500/20 text-rose-400';
-                    appendToTerminal(data.output, 'error');
+            if (caso.json) {
+                try {
+                    const res = await fetch(`/api/revision/file/${caso.json}`);
+                    const jsonData = await res.json();
+                    
+                    // Flatten key data for the inputs. (PDF extraction puts it mostly at root)
+                    const mapping = {
+                        'rev_codigoGeneracion': jsonData.codigoGeneracion || (jsonData.identificacion && jsonData.identificacion.codigoGeneracion) || "",
+                        'rev_numeroControl': jsonData.numeroControl || (jsonData.identificacion && jsonData.identificacion.numeroControl) || "",
+                        'rev_selloRecibido': jsonData.selloRecibido || "",
+                        'rev_fecEmi': jsonData.fecEmi || (jsonData.identificacion && jsonData.identificacion.fecEmi) || "",
+                        'rev_tipoDte': jsonData.tipoDte || (jsonData.identificacion && jsonData.identificacion.tipoDte) || "03",
+                        'rev_nombre': jsonData.nombre || (jsonData.emisor && jsonData.emisor.nombre) || "",
+                        'rev_nrc': jsonData.nrc || (jsonData.emisor && jsonData.emisor.nrc) || "",
+                        'rev_subTotal': (jsonData.resumen && (jsonData.resumen.totalGravada || jsonData.resumen.totalCompra)) || jsonData.totalCompra || 0.0,
+                        'rev_iva': (jsonData.resumen && jsonData.resumen.tributos && jsonData.resumen.tributos.find(t => t.codigo === "20")) ? jsonData.resumen.tributos.find(t => t.codigo === "20").valor : 0.0,
+                        'rev_ivaPercibido': (jsonData.resumen && (jsonData.resumen.ivaPerci1 || jsonData.resumen.ivaPerci)) || 0.0,
+                        'rev_ivaRetenido': (jsonData.resumen && (jsonData.resumen.ivaRete1 || jsonData.resumen.ivaRete)) || 0.0,
+                        'rev_fovial': (jsonData.resumen && jsonData.resumen.tributos && jsonData.resumen.tributos.find(t => t.codigo === "D1")) ? jsonData.resumen.tributos.find(t => t.codigo === "D1").valor : 0.0,
+                        'rev_cotrans': (jsonData.resumen && jsonData.resumen.tributos && jsonData.resumen.tributos.find(t => t.codigo === "D4")) ? jsonData.resumen.tributos.find(t => t.codigo === "D4").valor : 0.0,
+                        'rev_exentos': (jsonData.resumen && jsonData.resumen.totalExenta) || 0.0,
+                        'rev_totalGeneral': (jsonData.resumen && jsonData.resumen.montoTotalOperacion) || jsonData.totalCompra || 0.0
+                    };
+                    
+                    for (const [id, val] of Object.entries(mapping)) {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.value = val;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing JSON del caso:", e);
                 }
-            } catch(e) {
-                status.innerText = 'Error';
-                status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-rose-500/20 text-rose-400';
-                appendToTerminal(str(e), 'error');
+            }
+            
+            // Validar visualmente (bordes rojos)
+            inputs.forEach(inp => {
+                validateVisual(inp);
+                inp.addEventListener('input', () => validateVisual(inp));
+            });
+        }
+        
+        function validateVisual(el) {
+            const val = el.value.trim();
+            if (!val || val === "0" || val === "0.0" || val.includes("ERROR") || val === "0.00") {
+                el.classList.add('border-red-500', 'shadow-[0_0_10px_rgba(239,68,68,0.3)]');
+                el.classList.remove('border-gray-600', 'border-brand-500');
+            } else {
+                el.classList.remove('border-red-500', 'shadow-[0_0_10px_rgba(239,68,68,0.3)]');
+                el.classList.add('border-gray-600');
+            }
+        }
+        
+        function prevCase() {
+            if (revisionCases.length === 0) return;
+            if (currentRevisionIndex > 0) {
+                currentRevisionIndex--;
+                loadCase(currentRevisionIndex);
+            }
+        }
+        
+        function nextCase() {
+            if (revisionCases.length === 0) return;
+            if (currentRevisionIndex < revisionCases.length - 1) {
+                currentRevisionIndex++;
+                loadCase(currentRevisionIndex);
+            }
+        }
+
+        async function submitRevision() {
+            const caso = revisionCases[currentRevisionIndex];
+            if (!caso) return;
+            
+            const btn = document.getElementById('btnReinject');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Procesando...';
+            
+            const payload = {
+                stem: caso.stem,
+                pdf: caso.pdf,
+                codigoGeneracion: document.getElementById('rev_codigoGeneracion').value,
+                numeroControl: document.getElementById('rev_numeroControl').value,
+                selloRecibido: document.getElementById('rev_selloRecibido').value,
+                fecEmi: document.getElementById('rev_fecEmi').value,
+                tipoDte: document.getElementById('rev_tipoDte').value,
+                nombre: document.getElementById('rev_nombre').value,
+                nrc: document.getElementById('rev_nrc').value,
+                subTotal: document.getElementById('rev_subTotal').value,
+                iva: document.getElementById('rev_iva').value,
+                ivaPercibido: document.getElementById('rev_ivaPercibido').value,
+                ivaRetenido: document.getElementById('rev_ivaRetenido').value,
+                fovial: document.getElementById('rev_fovial').value,
+                cotrans: document.getElementById('rev_cotrans').value,
+                exentos: document.getElementById('rev_exentos').value,
+                totalGeneral: document.getElementById('rev_totalGeneral').value
+            };
+            
+            try {
+                const res = await fetch('/api/revision/reinject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Remover de la lista
+                    revisionCases.splice(currentRevisionIndex, 1);
+                    // Cargar siguiente o cerrar
+                    if (revisionCases.length > 0) {
+                        if (currentRevisionIndex >= revisionCases.length) {
+                            currentRevisionIndex = revisionCases.length - 1;
+                        }
+                        loadCase(currentRevisionIndex);
+                    } else {
+                        closeReviewStation();
+                    }
+                } else {
+                    alert("Error reinsertando: " + data.error);
+                }
+            } catch (e) {
+                alert("Error de red: " + e.toString());
             } finally {
                 btn.disabled = false;
-                btn.classList.remove('opacity-80', 'scale-[0.98]');
-                updateStats(); // Update immediately after job
-                
-                // Reset status after 5s
-                setTimeout(() => {
-                    status.innerText = 'Listo';
-                    status.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-slate-800 text-slate-400';
-                }, 5000);
+                btn.innerHTML = originalHtml;
+            }
+        }
+        // ─── Configuración de Cuentas ─────────────────────────────────
+        function openAccountConfig() {
+            const modal = document.getElementById('accountConfigModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            loadAccountsList();
+        }
+
+        function closeAccountConfig() {
+            const modal = document.getElementById('accountConfigModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function onProveedorChange() {
+            const val = document.getElementById('acc_proveedor').value;
+            const custom = document.getElementById('customServerFields');
+            if (val === 'custom') {
+                custom.classList.remove('hidden');
+            } else {
+                custom.classList.add('hidden');
             }
         }
 
-        async function openExplorer() {
-            try {
-                const res = await fetch('/api/open_explorer', { method: 'POST' });
-                const data = await res.json();
-                if(!data.success) {
-                    appendToTerminal(`Error al abrir explorador: ${data.error}`, 'error');
-                } else {
-                    appendToTerminal(`Directorio mineria-finalizada/ abierto en el explorador.`, 'command');
+        function onAuthMethodChange() {
+            const method = document.querySelector('input[name="auth_method"]:checked').value;
+            const passField = document.getElementById('passwordField');
+            const oauthField = document.getElementById('oauthField');
+            if (method === 'oauth2') {
+                passField.classList.add('hidden');
+                oauthField.classList.remove('hidden');
+            } else {
+                passField.classList.remove('hidden');
+                oauthField.classList.add('hidden');
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('acc_password');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function onOAuthFileSelect(input) {
+            const label = document.getElementById('oauthFileName');
+            if (input.files.length > 0) {
+                label.textContent = input.files[0].name;
+                label.classList.add('text-brand-300');
+            } else {
+                label.textContent = 'Clic para seleccionar client_secret.json';
+                label.classList.remove('text-brand-300');
+            }
+        }
+
+        async function submitAccount(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnAddAccount');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Guardando...';
+
+            const formData = new FormData();
+            formData.append('nombre', document.getElementById('acc_nombre').value);
+            formData.append('correo', document.getElementById('acc_correo').value);
+            formData.append('proveedor', document.getElementById('acc_proveedor').value);
+            formData.append('servidor_custom', document.getElementById('acc_servidor_custom')?.value || '');
+            formData.append('puerto_custom', document.getElementById('acc_puerto_custom')?.value || '993');
+
+            const authMethod = document.querySelector('input[name="auth_method"]:checked').value;
+            formData.append('auth_method', authMethod);
+
+            if (authMethod === 'password') {
+                formData.append('password', document.getElementById('acc_password').value);
+            } else {
+                const fileInput = document.getElementById('acc_credentials_file');
+                if (fileInput.files.length > 0) {
+                    formData.append('credentials_file', fileInput.files[0]);
                 }
-            } catch(e) {
-                console.error(e);
+            }
+
+            try {
+                const res = await fetch('/api/config/account', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('accountForm').reset();
+                    onProveedorChange();
+                    onAuthMethodChange();
+                    document.getElementById('oauthFileName').textContent = 'Clic para seleccionar client_secret.json';
+                    loadAccountsList();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error de red: ' + e.toString());
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        async function loadAccountsList() {
+            const container = document.getElementById('accountsList');
+            container.innerHTML = '<div class="text-center py-6"><i class="fa-solid fa-spinner fa-spin text-brand-400 text-xl"></i></div>';
+
+            try {
+                const res = await fetch('/api/config/accounts');
+                const data = await res.json();
+                const accounts = data.accounts || [];
+
+                if (accounts.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-10">
+                            <i class="fa-solid fa-inbox text-4xl text-gray-600 mb-3"></i>
+                            <p class="text-gray-500 text-sm">No hay cuentas configuradas.</p>
+                            <p class="text-gray-600 text-xs mt-1">Usa el formulario de la izquierda para agregar la primera.</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = accounts.map(acc => {
+                    const iconClass = acc.auth_method === 'oauth2'
+                        ? 'fa-brands fa-google text-red-400'
+                        : 'fa-solid fa-envelope text-blue-400';
+                    const protoBadge = acc.auth_method === 'oauth2'
+                        ? '<span class="text-[10px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded-full font-mono">OAuth2</span>'
+                        : '<span class="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-mono">IMAP</span>';
+                    return `
+                        <div class="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50 hover:border-gray-600 transition-colors group">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-3 min-w-0">
+                                    <div class="w-9 h-9 rounded-lg bg-gray-700/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="${iconClass}"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold text-white truncate">${acc.nombre}</p>
+                                        <p class="text-xs text-gray-400 truncate">${acc.usuario}</p>
+                                        <div class="mt-1.5 flex items-center space-x-2">
+                                            ${protoBadge}
+                                            ${acc.servidor ? '<span class="text-[10px] text-gray-500 font-mono">' + acc.servidor + '</span>' : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="deleteAccount('${acc.nombre.replace(/'/g, "\\'")}')"
+                                    class="text-gray-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2 p-1"
+                                    title="Eliminar cuenta">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                }).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p class="text-red-400 text-sm text-center">Error cargando cuentas.</p>';
+            }
+        }
+
+        async function deleteAccount(nombre) {
+            if (!confirm(`¿Eliminar la cuenta "${nombre}"? Esta acción no se puede deshacer.`)) return;
+            try {
+                const res = await fetch('/api/config/account', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadAccountsList();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error de red: ' + e.toString());
             }
         }
     </script>
