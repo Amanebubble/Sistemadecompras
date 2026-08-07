@@ -65,6 +65,50 @@ class GeneradorExcel:
         columnas_ordenadas = [col for col in columnas_formato.values() if col in df_export.columns]
         df_export = df_export[columnas_ordenadas]
         
+        # --- Lógica de Base de Datos de Referencia (Fallback de Proveedores) ---
+        ruta_base_ref = Path(__file__).parent.parent / "2026 06 - JC FOOD SERVICE LIBROS DE IVA (1).xlsx"
+        if ruta_base_ref.exists():
+            try:
+                # header=2 significa que la tercera fila (índice 2) tiene las cabeceras reales
+                df_ref = pd.read_excel(str(ruta_base_ref), sheet_name="CLIENTES Y PROVEEDORES", header=2)
+                
+                mapa_nrc = {}
+                mapa_nit = {}
+                
+                if "NRC" in df_ref.columns and "NOMBRE" in df_ref.columns:
+                    for _, row in df_ref.dropna(subset=["NRC"]).iterrows():
+                        nrc_str = str(row["NRC"]).strip()
+                        nombre_str = str(row["NOMBRE"]).strip() if pd.notna(row["NOMBRE"]) else ""
+                        if nrc_str and nombre_str:
+                            mapa_nrc[nrc_str] = nombre_str
+                            
+                if "NIT" in df_ref.columns and "NOMBRE" in df_ref.columns:
+                    for _, row in df_ref.dropna(subset=["NIT"]).iterrows():
+                        nit_str = str(row["NIT"]).replace("-","").strip() # Normalizar NIT si es necesario
+                        nombre_str = str(row["NOMBRE"]).strip() if pd.notna(row["NOMBRE"]) else ""
+                        if nit_str and nombre_str:
+                            mapa_nit[nit_str] = nombre_str
+                
+                # Aplicar relleno a los vacíos en df_export
+                col_prov = "Nombre del Proveedor"
+                col_nrc = "N.R.C."
+                col_nit = "NIT,CIP,DUI del Sujeto Excluido"
+                
+                if col_prov in df_export.columns:
+                    for idx, row in df_export.iterrows():
+                        prov_actual = str(row[col_prov]).strip()
+                        if pd.isna(row[col_prov]) or prov_actual == "" or prov_actual.lower() == "nan" or prov_actual.lower() == "none":
+                            nrc = str(row.get(col_nrc, "")).strip()
+                            nit = str(row.get(col_nit, "")).replace("-","").strip()
+                            
+                            nuevo_nombre = mapa_nrc.get(nrc) or mapa_nit.get(nit) or ""
+                            if nuevo_nombre:
+                                df_export.at[idx, col_prov] = nuevo_nombre
+                                
+            except Exception as e:
+                print(f"[GeneradorExcel] Error al cruzar con BD de referencia: {e}")
+        # -----------------------------------------------------------------------
+        
         nombre_cliente_limpio = "".join([c if c.isalnum() else "_" for c in str(cliente)])
         
         from datetime import datetime

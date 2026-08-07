@@ -84,11 +84,11 @@ def extraer_datos_regex(texto: str) -> dict:
     """Extrae los campos clave usando expresiones regulares."""
     
     # UUID: 36 caracteres con guiones
-    match_uuid = re.search(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', texto)
+    match_uuid = re.search(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', texto)
     uuid_val = match_uuid.group(0).upper() if match_uuid else ""
     
     # Sello de recepción: cadena alfanumérica larga
-    match_sello = re.search(r'(?:sello\s+recepcion|sello\s+de\s+recepci[\w]*)\s*[:=]?\s*([a-z0-9]{30,45})', texto)
+    match_sello = re.search(r'(?:sello\s+recepcion|sello\s+de\s+recepci[\w]*)\s*[:=]?\s*([a-zA-Z0-9]{30,50})', texto)
     sello_val = match_sello.group(1).upper() if match_sello else ""
     
     # Fecha de emisión
@@ -100,8 +100,12 @@ def extraer_datos_regex(texto: str) -> dict:
     control_val = match_control.group(1).upper() if match_control else ""
 
     # NRC (Mejora)
-    match_nrc = re.search(r'nrc\s*[:=]?\s*.{0,50}?(\d{4,8}-\d|\d{3,8})', texto)
+    match_nrc = re.search(r'nrc\s*[:=]?\s*.{0,50}?(\d{3,8}-\d|\d{3,8})', texto)
     nrc_val = match_nrc.group(1) if match_nrc else ""
+    
+    # NIT
+    match_nit = re.search(r'nit\s*[:=]?\s*.{0,50}?(\d{4}-\d{6}-\d{3}-\d)', texto)
+    nit_val = match_nit.group(1) if match_nit else ""
     
     # Monto total (Mejora para validación)
     raw_matches = re.findall(r'\b(\d{1,3}(?:,\d{3})*\.\d{2})\b', texto)
@@ -155,12 +159,12 @@ def extraer_datos_regex(texto: str) -> dict:
     
     # Búsqueda en base de datos para nombre de emisor
     nombre_emisor = "Extraido de PDF"
-    nit_emisor = ""
+    nit_emisor = nit_val
     if nrc_val:
         entidad = buscar_por_nrc(nrc_val)
         if entidad:
             nombre_emisor = entidad.get("nombre", nombre_emisor)
-            nit_emisor = entidad.get("nit", "")
+            nit_emisor = nit_emisor or entidad.get("nit", "")
             
     # Validación de usuario: si no hay nombre o nit o nrc, mandar a revisión
     if nombre_emisor == "Extraido de PDF" and not nit_emisor:
@@ -237,10 +241,12 @@ def procesar_cola():
         if not texto:
             print("    [X] No se pudo extraer texto del PDF.")
             registrar_error(pdf.name, "Ambos niveles de extracción fallaron o texto vacío.")
-            # Mover a revisión manual
             shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
-            # Emitir excepción para que motor_stream lo atrape y envíe el [SEMAFORO:warning]
-            raise Exception("Extracción de texto PDF fallida (Fallback agotado).")
+            ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
+            with open(ruta_json, 'w', encoding='utf-8') as f:
+                json.dump({"identificacion": {"codigoGeneracion": ""}, "emisor": {"nombre": "Fallo Texto"}, "texto_crudo": ""}, f, ensure_ascii=False)
+            print("    [!] Enviado a Revisión Manual con JSON parcial vacío.")
+            continue
             
         # Extracción de datos
         datos_json = extraer_datos_regex(texto)
@@ -249,13 +255,21 @@ def procesar_cola():
             print("    [!] No se encontró UUID válido en el texto.")
             registrar_error(pdf.name, "No se encontró UUID en el texto extraído.")
             shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
-            raise Exception("No se encontró UUID válido en el DTE (Archivo movido a Revisión Manual).")
+            ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
+            with open(ruta_json, 'w', encoding='utf-8') as f:
+                json.dump(datos_json, f, ensure_ascii=False, indent=2)
+            print("    [!] Enviado a Revisión Manual por falta de UUID.")
+            continue
             
         if datos_json["emisor"]["nombre"] in ["Extraido de PDF", "Forzar_Revision"]:
             print("    [!] Faltan datos críticos del proveedor o finanzas complejas (Revisión manual requerida).")
             registrar_error(pdf.name, "No se encontró proveedor en BD o finanzas complejas no extraíbles.")
             shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
-            raise Exception("Proveedor desconocido o finanzas complejas. Enviado a Revisión Manual.")
+            ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
+            with open(ruta_json, 'w', encoding='utf-8') as f:
+                json.dump(datos_json, f, ensure_ascii=False, indent=2)
+            print("    [!] Enviado a Revisión Manual por proveedor desconocido o finanzas complejas.")
+            continue
             
         # Guardar el JSON en cola0
         nombre_json = pdf.with_suffix(".json").name

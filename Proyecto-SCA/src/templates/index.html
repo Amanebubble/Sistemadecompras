@@ -176,11 +176,15 @@
                     </p>
                 </div>
                 
-                <div class="z-10 w-full md:w-auto">
+                <div class="z-10 w-full md:w-auto flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
                     <button id="btnRunAll" onclick="runPipeline()" class="w-full relative group bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 text-white shadow-[0_0_20px_rgba(45,212,191,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.5)] transition-all duration-300 px-8 py-4 rounded-xl font-bold text-lg overflow-hidden flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed">
                         <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                         <i id="btnIcon" class="fa-solid fa-play"></i>
                         <span id="btnText">Ejecutar Flujo Automático</span>
+                    </button>
+                    <button id="btnStopEngine" onclick="stopPipeline()" disabled class="w-full md:w-auto bg-gray-800 hover:bg-red-600/80 border border-gray-700 hover:border-red-500 text-gray-300 transition-all duration-300 px-6 py-4 rounded-xl font-bold flex items-center justify-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed" title="Detener forzadamente">
+                        <i class="fa-solid fa-stop"></i>
+                        <span class="md:hidden lg:inline">Detener</span>
                     </button>
                 </div>
             </div>
@@ -781,25 +785,19 @@
             try {
                 const response = await fetch('/api/run/all', { method: 'POST' });
                 const data = await response.json();
-                
-                // Mostrar contenedor de alertas
-                document.getElementById('alertContainer').classList.remove('hidden');
 
                 if (data.success) {
-                    // Success UI
-                    document.getElementById('successAlert').classList.remove('hidden');
-                    consoleOut.innerHTML = escapeHtml(data.output || "Ejecución finalizada.");
+                    pollEngineStatus();
                 } else {
-                    // Error UI
+                    document.getElementById('alertContainer').classList.remove('hidden');
                     document.getElementById('errorAlert').classList.remove('hidden');
-                    document.getElementById('errorModule').textContent = data.failed_module || 'Desconocido';
+                    document.getElementById('errorModule').textContent = data.failed_module || 'Inicio';
+                    document.getElementById('errorDetails').textContent = data.message || "Error al iniciar";
                     
-                    // Extraer las últimas líneas de salida
-                    const outLines = (data.output || "").split('\n');
-                    const lastLines = outLines.slice(Math.max(outLines.length - 15, 0)).join('\n');
-                    document.getElementById('errorDetails').textContent = lastLines;
-                    
-                    consoleOut.innerHTML = escapeHtml(data.output || "Error desconocido.");
+                    btn.disabled = false;
+                    icon.className = 'fa-solid fa-play';
+                    text.textContent = 'Ejecutar Flujo Automático';
+                    progress.classList.add('hidden');
                 }
             } catch (err) {
                 document.getElementById('alertContainer').classList.remove('hidden');
@@ -807,20 +805,98 @@
                 document.getElementById('errorModule').textContent = 'Network/Fetch';
                 document.getElementById('errorDetails').textContent = err.toString();
                 consoleOut.innerHTML = `<span class="text-red-400">Error de red: ${err.toString()}</span>`;
-            } finally {
-                // Restaurar botón a estado original
+                
                 btn.disabled = false;
                 icon.className = 'fa-solid fa-play';
                 text.textContent = 'Ejecutar Flujo Automático';
                 progress.classList.add('hidden');
-                
-                // Hacer auto-scroll en la consola
-                const term = document.getElementById('terminalScroll');
-                term.scrollTop = term.scrollHeight;
-                
-                // Forzar una última actualización visual inmediata (con pulso)
-                updateStats(true);
             }
+        }
+
+        async function stopPipeline() {
+            const btnStop = document.getElementById('btnStopEngine');
+            if (btnStop) {
+                btnStop.disabled = true;
+                btnStop.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span class="md:hidden lg:inline"> Deteniendo...</span>';
+            }
+            try {
+                await fetch('/api/run/stop', { method: 'POST' });
+            } catch(e) {
+                console.error("Error deteniendo el pipeline", e);
+            } finally {
+                if (btnStop) {
+                    btnStop.innerHTML = '<i class="fa-solid fa-stop"></i><span class="md:hidden lg:inline"> Detener</span>';
+                }
+            }
+        }
+
+        let enginePollInterval = null;
+        let isEngineRunning = false;
+        let lastLogLength = -1;
+        async function pollEngineStatus() {
+            if (enginePollInterval) clearInterval(enginePollInterval);
+            isEngineRunning = true;
+            if(document.getElementById('btnStopEngine')) document.getElementById('btnStopEngine').disabled = false;
+            
+            enginePollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/status');
+                    const data = await res.json();
+                    
+                    const consoleOut = document.getElementById('consoleOutput');
+                    if (data.logs && data.logs.length !== lastLogLength) {
+                        lastLogLength = data.logs.length;
+                        consoleOut.innerHTML = data.logs.map(l => escapeHtml(l)).join('<br>');
+                        const term = document.getElementById('terminalScroll');
+                        term.scrollTop = term.scrollHeight;
+                    }
+                    
+                    const fText = document.getElementById('factoryStatusText');
+                    
+                    document.getElementById('flow-1').classList.add('hidden');
+                    document.getElementById('flow-2').classList.add('hidden');
+                    document.getElementById('flow-3').classList.add('hidden');
+                    
+                    if (data.activo) {
+                        fText.textContent = `Fase: ${data.fase || 'Procesando'}`;
+                        document.getElementById('factoryAnimation').classList.remove('opacity-50');
+                        
+                        const faseL = data.fase.toLowerCase();
+                        if (faseL.includes('conection') || faseL.includes('orquestador') || faseL.includes('iniciando')) {
+                            document.getElementById('flow-1').classList.remove('hidden');
+                        } else if (faseL.includes('conversor1') || faseL.includes('pdf')) {
+                            document.getElementById('flow-2').classList.remove('hidden');
+                        } else if (faseL.includes('conversor0') || faseL.includes('json') || faseL.includes('generador')) {
+                            document.getElementById('flow-3').classList.remove('hidden');
+                        }
+                    } else {
+                        fText.textContent = "Motor Apagado";
+                        document.getElementById('factoryAnimation').classList.add('opacity-50');
+                        clearInterval(enginePollInterval);
+                        isEngineRunning = false;
+                        
+                        if(document.getElementById('btnStopEngine')) document.getElementById('btnStopEngine').disabled = true;
+                        
+                        const btn = document.getElementById('btnRunAll');
+                        btn.disabled = false;
+                        document.getElementById('btnIcon').className = 'fa-solid fa-play';
+                        document.getElementById('btnText').textContent = 'Ejecutar Flujo Automático';
+                        document.getElementById('progressContainer').classList.add('hidden');
+                        
+                        if (data.error) {
+                            document.getElementById('alertContainer').classList.remove('hidden');
+                            document.getElementById('errorAlert').classList.remove('hidden');
+                            document.getElementById('errorModule').textContent = 'Pipeline Completado con Errores';
+                            document.getElementById('errorDetails').textContent = 'Revisa la consola para más detalles.';
+                        } else {
+                            document.getElementById('alertContainer').classList.remove('hidden');
+                            document.getElementById('successAlert').classList.remove('hidden');
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error polling status", e);
+                }
+            }, 1500);
         }
 
         function openExplorer() {
@@ -885,7 +961,7 @@
             const pdfViewer = document.getElementById('pdfViewer');
             const pdfOverlay = document.getElementById('pdfOverlay');
             if (caso.pdf) {
-                pdfViewer.src = `/api/revision/file/${caso.pdf}#toolbar=0&navpanes=0&scrollbar=0`;
+                pdfViewer.src = `/api/revision/file/${encodeURIComponent(caso.pdf)}#toolbar=0&navpanes=0&scrollbar=0`;
                 pdfOverlay.classList.add('hidden');
             } else {
                 pdfViewer.src = "";
@@ -1304,10 +1380,10 @@
             
             let html = '';
             mesesDisp.sort((a,b)=>a-b).forEach(m => {
-                html += <button onclick="descargarReporte('', , )" class="bg-gray-800 hover:bg-blue-600/30 border border-gray-700 hover:border-blue-500 text-gray-300 transition-all rounded p-3 flex flex-col items-center justify-center">
+                html += `<button onclick="descargarReporte('${cliente}', ${ano}, ${m})" class="bg-gray-800 hover:bg-blue-600/30 border border-gray-700 hover:border-blue-500 text-gray-300 transition-all rounded p-3 flex flex-col items-center justify-center">
                             <i class="fa-solid fa-file-excel text-blue-400 mb-1 text-lg"></i>
-                            <span class="text-sm font-bold"></span>
-                         </button>;
+                            <span class="text-sm font-bold">${mesesNombres[m-1]}</span>
+                         </button>`;
             });
             grid.innerHTML = html;
         }
@@ -1315,11 +1391,12 @@
             document.getElementById('loadingReporte').classList.remove('hidden');
             try {
                 // Check if showSaveFilePicker is available
-                const url = /api/reportes/descargar///;
+                const url = `/api/reportes/descargar/${cliente}/${ano}/${mes}`;
                 const res = await fetch(url);
                 if (!res.ok) throw new Error("Error en generacion");
                 const blob = await res.blob();
-                const filename = LibroCompras___.xlsx;
+                const fecha_descarga = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                const filename = `LibroCompras_${cliente.replace(/[^a-zA-Z0-9]/g, '_')}_${mes.toString().padStart(2, '0')}_${ano}_${fecha_descarga}.xlsx`;
                 
                 if (window.showSaveFilePicker) {
                     try {

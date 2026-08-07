@@ -102,6 +102,12 @@ def procesar_cuenta_con_reintentos(config_cuenta, settings):
         except Exception as exc:
             ultimo_error = exc
             print(f"  Intento {intento}/{max_intentos} falló para '{nombre}': {exc}")
+            
+            # Si es un error de timeout, abortamos y pasamos a la siguiente cuenta inmediatamente
+            if "timeout" in str(exc).lower() or "timed out" in str(exc).lower():
+                print(f"  [!] Abortando cuenta '{nombre}' por timeout (>30s). Pasando a la siguiente.")
+                break
+                
             if intento < max_intentos:
                 print(f"  Reintentando en {espera} segundos...")
                 time.sleep(espera)

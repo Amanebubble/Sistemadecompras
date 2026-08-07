@@ -201,6 +201,7 @@ def run_pipeline_background():
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            encoding='utf-8',
             env=env,
             bufsize=1
         )
@@ -402,26 +403,42 @@ def revision_list():
     
     patron_uuid = re.compile(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
     
-    casos = []
+    casos_dict = {}
+    
+    # Primero registrar todos los PDFs en revisión (huérfanos o no)
+    for p in pdfs_revision:
+        if not p.is_file(): continue
+        stem = p.stem
+        match = patron_uuid.search(stem)
+        uuid = match.group(0).upper() if match else stem.upper()
+        casos_dict[stem] = {
+            "stem": stem,
+            "pdf": p.name,
+            "json": None
+        }
+        
+    # Luego procesar los JSONs, actualizando o creando entradas
     for j in jsons:
         if not j.is_file(): continue
         stem = j.stem
         match = patron_uuid.search(stem)
         uuid = match.group(0).upper() if match else stem.upper()
         
-        pdf_name = None
-        for p in todos_pdfs:
-            if uuid in p.name.upper():
-                pdf_name = p.name
-                break
-                
-        casos.append({
-            "stem": stem,
-            "json": j.name,
-            "pdf": pdf_name
-        })
+        if stem in casos_dict:
+            casos_dict[stem]["json"] = j.name
+        else:
+            pdf_name = None
+            for p in todos_pdfs:
+                if uuid in p.name.upper():
+                    pdf_name = p.name
+                    break
+            casos_dict[stem] = {
+                "stem": stem,
+                "pdf": pdf_name,
+                "json": j.name
+            }
             
-    return jsonify({"casos": casos})
+    return jsonify({"casos": list(casos_dict.values())})
 
 @app.route('/api/revision/file/<path:filename>')
 def revision_file(filename):

@@ -18,6 +18,15 @@ from src.config import RUTA_BD_CONTROL
 
 _corriendo = True
 
+def sleep_con_latido(segundos, nombre_hilo):
+    """Espera activa que imprime latidos para demostrar que el hilo sigue vivo."""
+    for i in range(segundos):
+        if not _corriendo:
+            break
+        if i % 10 == 0 and i > 0:
+            print(f"[{nombre_hilo}] ⏳ Escuchando en 2º plano ({i}s/{segundos}s)...")
+        time.sleep(1)
+
 def hilo_imap():
     settings = cargar_settings()
     cuentas = cargar_cuentas()
@@ -36,10 +45,10 @@ def hilo_imap():
                     print(f"[SEMAFORO:account_error] Fallo en cuenta {nombre_cuenta}: {e_cuenta}")
                     registrar_error("Motor Stream (Cuenta)", nombre_cuenta, str(e_cuenta))
                     continue
-            time.sleep(15)  # Espera 15 segs antes de revisar correos de nuevo
+            sleep_con_latido(15, "Conector IMAP")
         except Exception as e:
             registrar_error("Hilo IMAP", "General", str(e))
-            time.sleep(15)
+            sleep_con_latido(15, "Conector IMAP")
 
 def hilo_enrutador():
     while _corriendo:
@@ -48,10 +57,10 @@ def hilo_enrutador():
             print("[FASE:filtro_service]")
             enrutador = Enrutador()
             enrutador.ejecutar()
-            time.sleep(5)
+            sleep_con_latido(5, "Enrutador")
         except Exception as e:
             registrar_error("Hilo Enrutador", "General", str(e))
-            time.sleep(5)
+            sleep_con_latido(5, "Enrutador")
 
 def hilo_pdf():
     while _corriendo:
@@ -59,10 +68,10 @@ def hilo_pdf():
             print("\n[SEMAFORO:active] === FASE 3: CONVERSOR PDF ===")
             print("[FASE:conversor1_pdf]")
             extraer_pdfs()
-            time.sleep(5)
+            sleep_con_latido(5, "Conversor PDF")
         except Exception as e:
             registrar_error("Hilo PDF", "General", str(e))
-            time.sleep(5)
+            sleep_con_latido(5, "Conversor PDF")
 
 def hilo_json():
     while _corriendo:
@@ -74,10 +83,10 @@ def hilo_json():
             estandarizador.procesar_cola()
             if estandarizador.conexion:
                 estandarizador.conexion.close()
-            time.sleep(5)
+            sleep_con_latido(5, "JSON-a-SQL")
         except Exception as e:
             registrar_error("Hilo JSON", "General", str(e))
-            time.sleep(5)
+            sleep_con_latido(5, "JSON-a-SQL")
 
 def hilo_reportes():
     """Genera versiones Beta constantemente (Cada 1 minuto)"""
@@ -85,7 +94,7 @@ def hilo_reportes():
     while _corriendo:
         try:
             if not os.path.exists(RUTA_BD_CONTROL):
-                time.sleep(30)
+                sleep_con_latido(30, "Generador Reportes")
                 continue
                 
             conn = sqlite3.connect(RUTA_BD_CONTROL)
@@ -94,7 +103,7 @@ def hilo_reportes():
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='libro_compras'")
             if not cursor.fetchone():
                 conn.close()
-                time.sleep(30)
+                sleep_con_latido(30, "Generador Reportes")
                 continue
                 
             print("\n[SEMAFORO:active] === FASE 5: ACTUALIZANDO REPORTES BETA ===")
@@ -116,10 +125,10 @@ def hilo_reportes():
                     
                 print("  -> Reportes Beta regenerados.")
             conn.close()
-            time.sleep(60) 
+            sleep_con_latido(60, "Generador Reportes")
         except Exception as e:
             registrar_error("Hilo Reportes", "General", str(e))
-            time.sleep(60)
+            sleep_con_latido(60, "Generador Reportes")
 
 def ejecutar_stream():
     print("=== Iniciando Motor Concurrente (Múltiples Hilos) ===")
