@@ -66,7 +66,7 @@ class Estandarizador:
         carpeta_cola0: Path = CARPETA_COLA0, 
         carpeta_procesados: Path = CARPETA_PROCESADOS, 
         carpeta_revision: Path = CARPETA_REVISION, 
-        CARPETA_RESPALDO: Path = CARPETA_RESPALDO, CARPETA_OTROS_DTES,
+        carpeta_respaldo: Path = CARPETA_RESPALDO,
         carpeta_otros_dtes: Path = CARPETA_OTROS_DTES, 
         ruta_bd: Path = RUTA_BD_CONTROL, 
         ruta_log: Path = RUTA_LOG_SISTEMA
