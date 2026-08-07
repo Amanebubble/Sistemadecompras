@@ -210,7 +210,64 @@
                 </button>
             </h3>
             
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-slide-up" style="animation-delay: 0.3s;">
+            
+        <!-- Animated Flow Diagram -->
+        <div id="factoryAnimation" class="w-full h-24 bg-gray-900/50 rounded-xl border border-gray-700/50 relative overflow-hidden mb-8 opacity-50 transition-opacity duration-500 flex items-center justify-between px-4 md:px-12">
+            <style>
+                @keyframes flowPulse {
+                    0% { transform: translateX(-100%); opacity: 0; }
+                    50% { opacity: 1; }
+                    100% { transform: translateX(100%); opacity: 0; }
+                }
+                .animate-flow-pulse { animation: flowPulse 2s infinite linear; }
+            </style>
+            <!-- Nodes -->
+            <div class="flex flex-col items-center z-10">
+                <div id="node-imap" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+                    <i id="icon-node-imap" class="fa-solid fa-cloud-arrow-down text-gray-400 text-lg transition-colors duration-300"></i>
+                </div>
+                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">IMAP</span>
+            </div>
+            
+            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full">
+                <div class="absolute inset-0 bg-brand-500 hidden animate-flow-pulse" id="flow-1"></div>
+            </div>
+            
+            <div class="flex flex-col items-center z-10">
+                <div id="node-enrutador" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+                    <i id="icon-node-enrutador" class="fa-solid fa-code-branch text-gray-400 text-lg transition-colors duration-300"></i>
+                </div>
+                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">ENRUTADOR</span>
+            </div>
+
+            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full">
+                <div class="absolute inset-0 bg-brand-500 hidden animate-flow-pulse" id="flow-2"></div>
+            </div>
+            
+            <div class="flex flex-col items-center z-10">
+                <div id="node-pdf" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+                    <i id="icon-node-pdf" class="fa-regular fa-file-pdf text-gray-400 text-lg transition-colors duration-300"></i>
+                </div>
+                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">PDF OCR</span>
+            </div>
+
+            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full">
+                <div class="absolute inset-0 bg-brand-500 hidden animate-flow-pulse" id="flow-3"></div>
+            </div>
+            
+            <div class="flex flex-col items-center z-10">
+                <div id="node-sql" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+                    <i id="icon-node-sql" class="fa-solid fa-database text-gray-400 text-lg transition-colors duration-300"></i>
+                </div>
+                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">SQL BD</span>
+            </div>
+            
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300" id="factoryStatusTextWrapper">
+                <span class="bg-gray-900/90 px-3 py-1 rounded text-gray-500 font-mono text-sm uppercase tracking-widest border border-gray-800" id="factoryStatusText">Motor Apagado</span>
+            </div>
+        </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-slide-up" style="animation-delay: 0.3s;">
                 
                 <!-- Descargas -->
                 <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
@@ -278,7 +335,22 @@
                 </div>
 
                 <!-- Revisión Manual -->
-                <div class="glass-card rounded-xl p-5 relative overflow-hidden group border-orange-500/20 cursor-pointer hover:bg-orange-900/10" onclick="openReviewStation()">
+                
+                  <!-- Otros DTEs -->
+                  <div class="glass-card rounded-xl p-5 relative overflow-hidden group">
+                      <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <i class="fa-solid fa-filter text-4xl text-purple-400"></i>
+                      </div>
+                      <p class="text-sm font-medium text-purple-400 mb-1">Otros DTEs</p>
+                      <p class="text-xs text-gray-500 mb-3 truncate">No deducibles</p>
+                      
+                      <div class="flex items-baseline space-x-2">
+                          <span id="count_otros_dtes" class="text-3xl font-bold text-white tracking-tight">0</span>
+                          <span class="text-sm text-gray-400 font-medium">archivos</span>
+                      </div>
+                  </div>
+
+                  <div class="glass-card rounded-xl p-5 relative overflow-hidden group border-orange-500/20 cursor-pointer hover:bg-orange-900/10" onclick="openReviewStation()">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <i class="fa-solid fa-triangle-exclamation text-5xl text-orange-400"></i>
                     </div>
