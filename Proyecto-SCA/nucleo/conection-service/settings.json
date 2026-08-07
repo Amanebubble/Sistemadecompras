@@ -1,6 +1,0 @@
-{
-  "carpeta_descargas": "Descarga-doc",
-  "archivo_log": "log.csv",
-  "reintentos_por_cuenta": 3,
-  "espera_entre_reintentos_segundos": 10
-}

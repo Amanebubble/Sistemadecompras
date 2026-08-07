@@ -3,21 +3,34 @@ SCA ETL Pipeline — Servidor Web Flask.
 Punto de entrada único para administrar el pipeline desde el navegador.
 """
 
+import sys
 from pathlib import Path
 import os
 import subprocess
 import glob
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, send_from_directory
+import webbrowser
+from threading import Timer
+import json
+import shutil
+import re
 
-# Raíz del proyecto (donde vive app.py)
-BASE_DIR = Path(__file__).resolve().parent
-NUCLEO_DIR = BASE_DIR / "nucleo"
+# Configuración Dinámica de sys.path para Portabilidad Total
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from src.config import (
+    CARPETA_DESCARGAS, CARPETA_COLA1, CARPETA_COLA0, CARPETA_PROCESADOS, 
+    CARPETA_RESPALDO, CARPETA_REVISION, CARPETA_ERRORES, CARPETA_REPORTES, CARPETA_OTROS_DTES,
+    ARCHIVO_CUENTAS, CREDENTIALS_DIR, RAIZ_PROYECTO, SRC_DIR
+)
+
+BASE_DIR = RAIZ_PROYECTO
+ENV_FILE = BASE_DIR / ".env"
 
 app = Flask(
     __name__,
-    template_folder=str(NUCLEO_DIR / "templates"),
+    template_folder=str(SRC_DIR / "templates"),
 )
-
 
 @app.route('/')
 def index():
@@ -26,36 +39,30 @@ def index():
 
 @app.route('/api/stats')
 def get_stats():
-    descarga_dir = BASE_DIR / "Descarga-doc"
-    cola1_dir = NUCLEO_DIR / "filtro_service" / "cola1"
-    cola0_dir = NUCLEO_DIR / "filtro_service" / "cola0"
-    procesados_dir = NUCLEO_DIR / "Procesados"
-    respaldo_dir = NUCLEO_DIR / "Respaldo_PDF"
-    revision_dir = NUCLEO_DIR / "Revision_Manual"
-
     def count_files(dir_path):
         return len([f for f in dir_path.glob("*") if f.is_file()]) if dir_path.exists() else 0
 
     return jsonify({
-        "descarga_count": count_files(descarga_dir),
-        "cola1_count": count_files(cola1_dir),
-        "cola0_count": count_files(cola0_dir),
-        "procesados_count": count_files(procesados_dir),
-        "respaldo_count": count_files(respaldo_dir),
-        "revision_count": count_files(revision_dir),
+        "descarga_count": count_files(CARPETA_DESCARGAS),
+        "cola1_count": count_files(CARPETA_COLA1),
+        "cola0_count": count_files(CARPETA_COLA0),
+        "procesados_count": count_files(CARPETA_PROCESADOS),
+        "respaldo_count": count_files(CARPETA_RESPALDO),
+        "revision_count": count_files(CARPETA_REVISION),
+        "otros_dtes_count": count_files(CARPETA_OTROS_DTES),
     })
 
 
 @app.route('/api/run/conection', methods=['POST'])
 def run_conection():
     try:
-        conection_dir = NUCLEO_DIR / "conection-service"
+        conection_main = SRC_DIR / "conection_service" / "main.py"
         result = subprocess.run(
-            ["python", "main.py"],
-            cwd=str(conection_dir),
+            [sys.executable, str(conection_main)],
+            cwd=str(BASE_DIR),
             capture_output=True,
             text=True,
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+            env={**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONNOUSERSITE": "1"},
         )
         return jsonify({"success": result.returncode == 0, "output": result.stdout + "\n" + result.stderr})
     except Exception as e:
@@ -65,15 +72,9 @@ def run_conection():
 @app.route('/api/run/filtro', methods=['POST'])
 def run_filtro():
     try:
-        filtro_main = NUCLEO_DIR / "filtro_service" / "main.py"
-        result = subprocess.run(
-            ["python", str(filtro_main)],
-            cwd=str(BASE_DIR),
-            capture_output=True,
-            text=True,
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-        )
-        return jsonify({"success": result.returncode == 0, "output": result.stdout + "\n" + result.stderr})
+        # Ya no hay main en filtro, pero podemos lanzar orquestador con un flag o crear un wrapper
+        # Por ahora lo dejamos atado a orquestador general
+        return jsonify({"success": False, "output": "Filtro standalone deshabilitado, use Ejecutar Todo."})
     except Exception as e:
         return jsonify({"success": False, "output": str(e)})
 
@@ -81,15 +82,7 @@ def run_filtro():
 @app.route('/api/run/conversor0', methods=['POST'])
 def run_conversor0():
     try:
-        conversor_main = NUCLEO_DIR / "conversor0_json" / "main.py"
-        result = subprocess.run(
-            ["python", str(conversor_main)],
-            cwd=str(BASE_DIR),
-            capture_output=True,
-            text=True,
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-        )
-        return jsonify({"success": result.returncode == 0, "output": result.stdout + "\n" + result.stderr})
+        return jsonify({"success": False, "output": "Conversor standalone deshabilitado, use Ejecutar Todo."})
     except Exception as e:
         return jsonify({"success": False, "output": str(e)})
 
@@ -97,98 +90,314 @@ def run_conversor0():
 @app.route('/api/run/conversor1', methods=['POST'])
 def run_conversor1():
     try:
-        conversor_main = NUCLEO_DIR / "conversor1_pdf" / "extractor_pdf.py"
+        conversor_main = SRC_DIR / "conversor_pdf" / "extractor_pdf.py"
         result = subprocess.run(
-            ["python", str(conversor_main)],
+            [sys.executable, str(conversor_main)],
             cwd=str(BASE_DIR),
             capture_output=True,
             text=True,
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+            env={**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONNOUSERSITE": "1"},
         )
         return jsonify({"success": result.returncode == 0, "output": result.stdout + "\n" + result.stderr})
     except Exception as e:
         return jsonify({"success": False, "output": str(e)})
 
+
+@app.route('/api/reportes/lista', methods=['GET'])
+def get_reportes_lista():
+    from src.config import RUTA_BD_CONTROL
+    import sqlite3
+    try:
+        if not os.path.exists(RUTA_BD_CONTROL):
+            return jsonify({"success": True, "reportes": []})
+        conn = sqlite3.connect(RUTA_BD_CONTROL)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='libro_compras'")
+        if not cursor.fetchone():
+            return jsonify({"success": True, "reportes": []})
+            
+        cursor.execute("SELECT DISTINCT cliente, ano, mes FROM libro_compras")
+        combinaciones = cursor.fetchall()
+        reportes = []
+        for c in combinaciones:
+            reportes.append({"cliente": c[0], "ano": c[1], "mes": c[2]})
+        
+
+            
+        conn.close()
+        return jsonify({"success": True, "reportes": reportes})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route('/api/reportes/descargar/<cliente>/<ano>/<mes>', methods=['GET'])
+def descargar_reporte(cliente, ano, mes):
+    from flask import send_file
+    try:
+        from src.generador_excel import GeneradorExcel
+        gen = GeneradorExcel()
+        # Generar el excel en demanda (esto consultara la DB y sobreescribira/creara el archivo)
+        ruta_archivo = gen.generar_reporte(cliente, int(ano), int(mes))
+        if not ruta_archivo:
+            return jsonify({"success": False, "error": "No hay datos para generar el reporte"}), 404
+            
+        return send_file(ruta_archivo, as_attachment=True)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Estado Global del Daemon
+pipeline_status = {
+    "estado_general": "Inactivo",
+    "activo": False,
+    "fase": "inactivo",
+    "archivo": "",
+    "progreso": 0,
+    "logs": [],
+    "error": False,
+    "terminado": False,
+    "estadisticas": {
+        "correos_leidos": 0,
+        "pdfs_extraidos": 0,
+        "excels_generados": 0,
+        "errores_imap": 0,
+        "errores_pdf": 0,
+        "errores_json": 0
+    }
+}
+
+orquestador_process = None
+
+def run_pipeline_background():
+    global pipeline_status, orquestador_process
+    import time
+    
+    pipeline_status["estado_general"] = "Procesando"
+    pipeline_status["activo"] = True
+    pipeline_status["fase"] = "Iniciando Orquestador Continuo"
+    pipeline_status["progreso"] = 0
+    pipeline_status["logs"] = ["=== Iniciando Motor Continuo ==="]
+    pipeline_status["terminado"] = False
+    pipeline_status["error"] = False
+    pipeline_status["estadisticas"] = {
+        "correos_leidos": 0,
+        "pdfs_extraidos": 0,
+        "excels_generados": 0,
+        "errores_imap": 0,
+        "errores_pdf": 0,
+        "errores_json": 0
+    }
+
+    pipeline_status["nivel_semaforo"] = "active"
+
+    cmd = [sys.executable, "-u", str(SRC_DIR / "orquestador.py")]
+    
+    try:
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1", "PYTHONNOUSERSITE": "1"}
+        orquestador_process = subprocess.Popen(
+            cmd,
+            cwd=str(BASE_DIR),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=env,
+            bufsize=1
+        )
+        
+        for line in iter(orquestador_process.stdout.readline, ''):
+            if not pipeline_status["activo"]:
+                break
+                
+            line_stripped = line.strip()
+            if not line_stripped:
+                continue
+                
+            if "Procesando:" in line_stripped:
+                pipeline_status["archivo"] = line_stripped.split("Procesando:")[-1].strip()
+                
+            if "DTE Extraído" in line_stripped or "Descargado:" in line_stripped:
+                pipeline_status["estadisticas"]["correos_leidos"] += 1
+            elif "Datos extraídos y enviados" in line_stripped:
+                pipeline_status["estadisticas"]["pdfs_extraidos"] += 1
+            elif "[OK] Creado:" in line_stripped or "Insertado/Actualizado DTE" in line_stripped:
+                pipeline_status["estadisticas"]["excels_generados"] += 1
+                
+            # Fases del stream
+            if "[FASE:" in line_stripped:
+                pipeline_status["fase"] = line_stripped.split("[FASE:")[1].split("]")[0]
+                
+            # Semáforo jerárquico
+            if "[SEMAFORO:" in line_stripped:
+                nivel = line_stripped.split("[SEMAFORO:")[1].split("]")[0]
+                pipeline_status["nivel_semaforo"] = nivel
+                
+            is_error = "[!]" in line_stripped or "[X]" in line_stripped or "Error" in line_stripped or "Exception" in line_stripped or "Fallo" in line_stripped
+            
+            if is_error:
+                pipeline_status["error"] = True
+                fase = pipeline_status.get("fase", "")
+                if fase == "conection_service":
+                    pipeline_status["estadisticas"]["errores_imap"] += 1
+                elif fase == "conversor1_pdf":
+                    pipeline_status["estadisticas"]["errores_pdf"] += 1
+                elif fase == "conversor0_json":
+                    pipeline_status["estadisticas"]["errores_json"] += 1
+            
+            pipeline_status["logs"].append(line_stripped)
+            # Mantener solo los últimos 150 logs en memoria para la consola
+            if len(pipeline_status["logs"]) > 150:
+                pipeline_status["logs"] = pipeline_status["logs"][-150:]
+        
+        if orquestador_process:
+            orquestador_process.stdout.close()
+            orquestador_process.wait()
+            
+    except Exception as e:
+        pipeline_status["logs"].append(f"[!] Excepción crítica: {str(e)}")
+        pipeline_status["error"] = True
+        pipeline_status["estado_general"] = "Completado con errores"
+        pipeline_status["nivel_semaforo"] = "critical"
+        
+    pipeline_status["fase"] = "Detenido"
+    pipeline_status["logs"].append("Pipeline detenido.")
+    pipeline_status["terminado"] = True
+    pipeline_status["activo"] = False
+    pipeline_status["estado_general"] = "Inactivo"
 
 @app.route('/api/run/all', methods=['POST'])
 def run_all():
-    modules = [
-        {"name": "conection-service", "cmd": ["python", "main.py"], "cwd": str(NUCLEO_DIR / "conection-service")},
-        {"name": "filtro_service", "cmd": ["python", str(NUCLEO_DIR / "filtro_service" / "main.py")], "cwd": str(BASE_DIR)},
-        {"name": "conversor1_pdf", "cmd": ["python", str(NUCLEO_DIR / "conversor1_pdf" / "extractor_pdf.py")], "cwd": str(BASE_DIR)},
-        {"name": "conversor0_json", "cmd": ["python", str(NUCLEO_DIR / "conversor0_json" / "main.py")], "cwd": str(BASE_DIR)},
-        {"name": "excel_services", "cmd": ["python", str(NUCLEO_DIR / "excel_services" / "generador_excel.py")], "cwd": str(BASE_DIR)},
-    ]
+    global pipeline_status
+    import threading
     
-    full_output = ""
-    for mod in modules:
+    if pipeline_status["activo"]:
+        return jsonify({"success": False, "message": "El motor continuo ya está en ejecución"})
+        
+    thread = threading.Thread(target=run_pipeline_background)
+    thread.daemon = True
+    thread.start()
+    
+    return jsonify({"success": True, "message": "Motor continuo iniciado"})
+
+@app.route('/api/run/stop', methods=['POST'])
+def stop_pipeline():
+    global pipeline_status, orquestador_process
+    if not pipeline_status["activo"]:
+        return jsonify({"success": False, "message": "El motor ya está detenido"})
+        
+    pipeline_status["activo"] = False
+    pipeline_status["logs"].append(">>> Solicitud de parada recibida. Abortando motor...")
+    
+    if orquestador_process:
         try:
-            full_output += f"\n=== Ejecutando {mod['name']} ===\n"
-            result = subprocess.run(
-                mod["cmd"],
-                cwd=mod["cwd"],
-                capture_output=True,
-                text=True,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-            )
-            full_output += result.stdout + "\n" + result.stderr
-            
-            if result.returncode != 0:
-                full_output += f"\n[!] Advertencia: Módulo {mod['name']} terminó con código {result.returncode}\n"
+            import signal
+            # Mata el proceso de forma agresiva para que no se quede bloqueado
+            if sys.platform == "win32":
+                subprocess.call(['taskkill', '/F', '/T', '/PID', str(orquestador_process.pid)])
+            else:
+                os.killpg(os.getpgid(orquestador_process.pid), signal.SIGTERM)
         except Exception as e:
-            full_output += f"\n[!] Advertencia: Excepción en {mod['name']}: {str(e)}\n"
+            print(f"Error al matar proceso: {e}")
             
-    return jsonify({
-        "success": True, 
-        "message": "Pipeline completo ejecutado exitosamente",
-        "output": full_output
-    })
+    return jsonify({"success": True, "message": "Motor detenido"})
 
-
-@app.route('/api/run/excel', methods=['POST'])
-def run_excel():
+@app.route('/api/errores', methods=['GET'])
+def get_errores():
     try:
-        excel_main = NUCLEO_DIR / "excel_services" / "generador_excel.py"
-        result = subprocess.run(
-            ["python", str(excel_main)],
-            cwd=str(BASE_DIR),
-            capture_output=True,
-            text=True,
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-        )
-        return jsonify({"success": result.returncode == 0, "output": result.stdout + "\n" + result.stderr})
+        import sqlite3
+        db_path = SRC_DIR / "auditoria.db"
+        if not db_path.exists():
+            return jsonify({"success": True, "errores": []})
+            
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT fecha_hora, modulo, cuenta, mensaje_error FROM registro_errores ORDER BY id DESC LIMIT 50")
+            errores = [{"fecha": row[0], "modulo": row[1], "cuenta": row[2], "mensaje": row[3]} for row in cursor.fetchall()]
+        return jsonify({"success": True, "errores": errores})
     except Exception as e:
-        return jsonify({"success": False, "output": str(e)})
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    global pipeline_status
+    return jsonify(pipeline_status)
+
+
+@app.route('/api/reportes/opciones', methods=['GET'])
+def get_report_options():
+    try:
+        import sqlite3
+        if not RUTA_BD_CONTROL.exists():
+            return jsonify({"success": True, "clientes": []})
+            
+        conn = sqlite3.connect(RUTA_BD_CONTROL)
+        cursor = conn.cursor()
+        
+        # Obtener clientes únicos
+        cursor.execute("SELECT DISTINCT cliente FROM libro_compras WHERE cliente IS NOT NULL AND cliente != '' ORDER BY cliente")
+        clientes = [row[0] for row in cursor.fetchall()]
+        
+        if not clientes:
+            return jsonify({"success": True, "clientes": []})
+            
+        # Para cada cliente, obtener años y meses
+        datos = []
+        for c in clientes:
+            cursor.execute("SELECT DISTINCT ano FROM libro_compras WHERE cliente = ? ORDER BY ano DESC", (c,))
+            anos = []
+            for row_ano in cursor.fetchall():
+                ano = row_ano[0]
+                cursor.execute("SELECT DISTINCT mes FROM libro_compras WHERE cliente = ? AND ano = ? ORDER BY mes DESC", (c, ano))
+                meses = [row_mes[0] for row_mes in cursor.fetchall()]
+                anos.append({"ano": ano, "meses": meses})
+            datos.append({"cliente": c, "anos": anos})
+            
+        conn.close()
+        return jsonify({"success": True, "datos": datos})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route('/api/reportes/generar', methods=['POST'])
+def generar_reporte():
+    try:
+        data = request.json
+        cliente = data.get('cliente')
+        ano = data.get('ano')
+        mes = data.get('mes')
+        
+        if not cliente or not ano or not mes:
+            return jsonify({"success": False, "error": "Faltan parámetros (cliente, ano, mes)"})
+            
+        from src.generador_excel import GeneradorExcel
+        gen = GeneradorExcel(str(RUTA_BD_CONTROL), str(CARPETA_REPORTES))
+        ruta = gen.generar_reporte(cliente, int(ano), int(mes))
+        
+        if not ruta:
+            return jsonify({"success": False, "error": "No hay datos para generar el reporte"})
+            
+        return jsonify({"success": True, "mensaje": "Reporte generado con éxito", "archivo": Path(ruta).name})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 
 @app.route('/api/open_explorer', methods=['POST'])
 def open_explorer():
     try:
-        target_dir = BASE_DIR / "mineria-finalizada"
-        target_dir.mkdir(parents=True, exist_ok=True)
-        os.startfile(str(target_dir))
+        CARPETA_REPORTES.mkdir(parents=True, exist_ok=True)
+        os.startfile(str(CARPETA_REPORTES))
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
 
-from flask import request, send_from_directory
-import json
-import shutil
-
-import re
-
 @app.route('/api/revision/list')
 def revision_list():
-    revision_dir = NUCLEO_DIR / "Revision_Manual"
-    respaldo_dir = NUCLEO_DIR / "Respaldo_PDF"
-    
-    if not revision_dir.exists():
+    if not CARPETA_REVISION.exists():
         return jsonify({"casos": []})
         
-    jsons = list(revision_dir.glob('*.json'))
-    pdfs_revision = list(revision_dir.glob('*.pdf'))
-    pdfs_respaldo = list(respaldo_dir.glob('*.pdf')) if respaldo_dir.exists() else []
+    jsons = list(CARPETA_REVISION.glob('*.json'))
+    pdfs_revision = list(CARPETA_REVISION.glob('*.pdf'))
+    pdfs_respaldo = list(CARPETA_RESPALDO.glob('*.pdf')) if CARPETA_RESPALDO.exists() else []
     todos_pdfs = pdfs_revision + pdfs_respaldo
     
     patron_uuid = re.compile(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
@@ -216,12 +425,10 @@ def revision_list():
 
 @app.route('/api/revision/file/<path:filename>')
 def revision_file(filename):
-    revision_dir = NUCLEO_DIR / "Revision_Manual"
-    respaldo_dir = NUCLEO_DIR / "Respaldo_PDF"
-    if (revision_dir / filename).exists():
-        return send_from_directory(str(revision_dir), filename)
-    elif (respaldo_dir / filename).exists():
-        return send_from_directory(str(respaldo_dir), filename)
+    if (CARPETA_REVISION / filename).exists():
+        return send_from_directory(str(CARPETA_REVISION), filename)
+    elif (CARPETA_RESPALDO / filename).exists():
+        return send_from_directory(str(CARPETA_RESPALDO), filename)
     return "File not found", 404
 
 @app.route('/api/revision/reinject', methods=['POST'])
@@ -261,21 +468,17 @@ def revision_reinject():
         }
         
         # Guardar en cola0
-        cola0_dir = NUCLEO_DIR / "filtro_service" / "cola0"
-        with open(cola0_dir / f"{stem}.json", "w", encoding="utf-8-sig") as f:
+        with open(CARPETA_COLA0 / f"{stem}.json", "w", encoding="utf-8-sig") as f:
             json.dump(hacienda_json, f, indent=4)
             
         # Limpiar originales en Revision_Manual y mover PDF a Respaldo_PDF si está en Revision
-        revision_dir = NUCLEO_DIR / "Revision_Manual"
-        respaldo_dir = NUCLEO_DIR / "Respaldo_PDF"
-        
         pdf_name = data.get('pdf')
         if pdf_name:
-            pdf_path_rev = revision_dir / pdf_name
+            pdf_path_rev = CARPETA_REVISION / pdf_name
             if pdf_path_rev.exists():
-                shutil.move(str(pdf_path_rev), str(respaldo_dir / pdf_name))
+                shutil.move(str(pdf_path_rev), str(CARPETA_RESPALDO / pdf_name))
         
-        json_path = revision_dir / f"{stem}.json"
+        json_path = CARPETA_REVISION / f"{stem}.json"
         if json_path.exists():
             os.remove(str(json_path))
             
@@ -284,14 +487,21 @@ def revision_reinject():
         return jsonify({"success": False, "error": str(e)})
 
 
+@app.route('/api/shutdown', methods=['POST', 'GET'])
+def shutdown():
+    """Apaga el servidor Flask de forma forzada para el modo --noconsole."""
+    def kill_server():
+        import time
+        time.sleep(0.5)
+        os._exit(0)
+    
+    import threading
+    threading.Thread(target=kill_server).start()
+    return jsonify({"success": True, "message": "Apagando el servidor..."})
+
+
 # ─── Configuración de Cuentas ───────────────────────────────────────────────
 from werkzeug.utils import secure_filename
-
-CONECTION_DIR = NUCLEO_DIR / "conection-service"
-ACCOUNTS_FILE = CONECTION_DIR / "accounts.json"
-ENV_FILE = BASE_DIR / ".env"
-CREDENTIALS_DIR = CONECTION_DIR / "credentials"
-CREDENTIALS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Mapeo de proveedores IMAP conocidos
 IMAP_SERVERS = {
@@ -302,14 +512,14 @@ IMAP_SERVERS = {
 
 def _leer_accounts():
     """Lee accounts.json devolviendo lista vacía si no existe."""
-    if not ACCOUNTS_FILE.exists():
+    if not ARCHIVO_CUENTAS.exists():
         return []
-    with open(ACCOUNTS_FILE, "r", encoding="utf-8") as f:
+    with open(ARCHIVO_CUENTAS, "r", encoding="utf-8") as f:
         return json.load(f)
 
 def _guardar_accounts(cuentas):
     """Escribe la lista de cuentas en accounts.json."""
-    with open(ACCOUNTS_FILE, "w", encoding="utf-8") as f:
+    with open(ARCHIVO_CUENTAS, "w", encoding="utf-8") as f:
         json.dump(cuentas, f, indent=2, ensure_ascii=False)
 
 def _env_set_key(key, value):
@@ -340,16 +550,59 @@ def _env_set_key(key, value):
 
 @app.route('/api/config/accounts', methods=['GET'])
 def config_list_accounts():
-    """Devuelve la lista de cuentas configuradas (sin contraseñas)."""
+    """Devuelve la lista de cuentas configuradas con estado de salud."""
     cuentas = _leer_accounts()
     safe_list = []
+    
+    import socket
+    import imaplib
+    
     for c in cuentas:
+        estado = "Activa"
+        color = "green"
+        motivo = "Lista para procesar"
+        
+        protocolo = c.get("protocolo", "")
+        
+        if protocolo == "gmail_oauth":
+            cred_path = CREDENTIALS_DIR / Path(c.get("credentials_path", "")).name
+            token_path = CREDENTIALS_DIR / Path(c.get("token_path", "")).name
+            
+            if not cred_path.exists():
+                estado = "Inactiva"
+                color = "red"
+                motivo = "Falta client_secret.json"
+            elif not token_path.exists():
+                estado = "Pendiente"
+                color = "yellow"
+                motivo = "Falta autorizar (Token). Se autorizará en la primera ejecución."
+        else:
+            # IMAP
+            env_key = c.get("password_env", "")
+            if not os.environ.get(env_key):
+                estado = "Inactiva"
+                color = "red"
+                motivo = f"Falta contraseña en el .env ({env_key})"
+            else:
+                # Intento de ping (solo red, no auth, para no bloquear la app con timeouts largos de login)
+                servidor = c.get("servidor", "")
+                puerto = c.get("puerto", 993)
+                try:
+                    socket.create_connection((servidor, puerto), timeout=3).close()
+                except Exception as e:
+                    estado = "Inactiva"
+                    color = "red"
+                    motivo = f"Servidor inaccesible: {str(e)}"
+        
         safe_list.append({
             "nombre": c.get("nombre", ""),
             "usuario": c.get("usuario", ""),
-            "protocolo": c.get("protocolo", ""),
+            "protocolo": protocolo,
             "servidor": c.get("servidor", ""),
-            "auth_method": "oauth2" if c.get("protocolo") == "gmail_oauth" else "password",
+            "auth_method": "oauth2" if protocolo == "gmail_oauth" else "password",
+            "estado": estado,
+            "color": color,
+            "motivo": motivo
         })
     return jsonify({"accounts": safe_list})
 
@@ -369,8 +622,13 @@ def config_add_account():
         if not nombre or not correo:
             return jsonify({"success": False, "error": "Nombre y correo son obligatorios."})
 
+        # Sanitizar nombre: solo alfanumérico sin espacios en mayúsculas
+        nombre = re.sub(r'[^A-Za-z0-9]', '', nombre).upper()
+        if not nombre:
+            return jsonify({"success": False, "error": "El nombre debe contener letras o números."})
+
         # Sanitizar nombre para generar la variable de entorno
-        env_key = "PASS_" + re.sub(r'[^A-Za-z0-9]', '_', nombre).upper()
+        env_key = "PASS_" + nombre
 
         palabras_clave = [
             "DTE", "factura", "CCF", "comprobante",
@@ -391,8 +649,8 @@ def config_add_account():
                 "nombre": nombre,
                 "protocolo": "gmail_oauth",
                 "usuario": correo,
-                "credentials_path": f"credentials/{safe_name}",
-                "token_path": f"credentials/token_{nombre}.json",
+                "credentials_path": f"{safe_name}",
+                "token_path": f"token_{nombre}.json",
                 "palabras_clave_asunto": palabras_clave,
             }
         else:
@@ -466,4 +724,13 @@ _cargar_env()
 
 
 if __name__ == '__main__':
+    def abrir_navegador():
+        """Abre la UI en el navegador por defecto."""
+        webbrowser.open("http://127.0.0.1:5000/")
+        
+    # Inicia un hilo que espera 1.5s antes de abrir el navegador
+    Timer(1.5, abrir_navegador).start()
+    
     app.run(debug=True, use_reloader=False, port=5000)
+
+

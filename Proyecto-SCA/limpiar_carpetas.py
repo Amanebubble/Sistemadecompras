@@ -32,7 +32,6 @@ def main():
     carpetas_a_limpiar = [
         base_dir / "Descarga-doc",
         base_dir / "mineria-finalizada",
-        base_dir / "Otros_Documentos_Clasificados",
         nucleo_dir / "filtro_service" / "cola0",
         nucleo_dir / "filtro_service" / "cola1",
         nucleo_dir / "Procesados",
@@ -57,7 +56,7 @@ def main():
             print(f"[!] Error al borrar {db_path.name}: {e}")
 
     # Limpiar logs
-    log_path = nucleo_dir / "conection-service" / "log.csv"
+    log_path = nucleo_dir / "conection_service" / "log.csv"
     if log_path.exists():
         try:
             log_path.unlink()

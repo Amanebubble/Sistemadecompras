@@ -1,0 +1,24 @@
+# ==========================================
+# REQUERIMIENTOS PRINCIPALES DEL PROYECTO SCA
+# ==========================================
+
+# 1. Dashboard Web y Orquestador (app.py)
+Flask==3.0.3
+Werkzeug==3.0.3
+python-dotenv==1.0.1  
+
+# 2. Motor de Base de Datos y Excel (excel_services)
+pandas==2.2.2
+openpyxl==3.1.5
+
+# 3. Descarga de Correos IMAP (conection-service)
+imap-tools==1.6.0
+
+# 4. Descarga de Correos Gmail OAuth2 (conection-service)
+google-api-python-client==2.137.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.1
+
+# 5. Extracción de Datos de PDF (conversor1_pdf)
+pdfplumber==0.11.2
+markitdown[all]
