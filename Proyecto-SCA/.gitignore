@@ -58,3 +58,4 @@ nucleo/conversor0_json/registro_errores.log
 !plantilla_dte.json
 !accounts.json
 !settings.json
+src/conection_service/accounts.json
