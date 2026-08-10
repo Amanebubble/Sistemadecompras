@@ -354,10 +354,20 @@ def procesar_cola():
             print(f"[Inteligencia Artificial] Falló OCR local en '{pdf.name}'. Enviando a Groq IA...")
             usar_gemini = True
         else:
-            datos_json = extraer_datos_regex(texto)
-            if not datos_json["identificacion"]["codigoGeneracion"] or datos_json["emisor"]["nombre"] in ["Extraido de PDF", "Forzar_Revision"]:
-                print(f"[Inteligencia Artificial] Regex incompleto en '{pdf.name}'. Enviando a Groq IA...")
-                usar_gemini = True
+            # NIVEL 2.5: FAST-TRACK (Plantillas Heurísticas para Proveedores Frecuentes)
+            try:
+                from src.conversor_pdf.plantillas_frecuentes import procesar_con_plantillas
+                datos_json = procesar_con_plantillas(texto)
+            except Exception as e:
+                print(f"    [!] Error en Fast-Track: {e}")
+                datos_json = None
+                
+            if not datos_json:
+                # Si falló el Fast-Track, intentamos Regex General
+                datos_json = extraer_datos_regex(texto)
+                if not datos_json["identificacion"]["codigoGeneracion"] or datos_json["emisor"]["nombre"] in ["Extraido de PDF", "Forzar_Revision"]:
+                    print(f"[Inteligencia Artificial] Regex incompleto en '{pdf.name}'. Enviando a Groq IA...")
+                    usar_gemini = True
                 
         if usar_gemini:
             datos_json = extraer_con_groq(pdf)
