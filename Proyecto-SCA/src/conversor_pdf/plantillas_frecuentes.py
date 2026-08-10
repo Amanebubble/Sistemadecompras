@@ -140,6 +140,65 @@ def extraer_plantilla_intelfon(texto: str) -> dict:
         "texto_crudo": "Extraído por Molde Fast-Track INTELFON"
     }
 
+def extraer_plantilla_generica(texto: str, nit: str, nrc: str, nombre: str) -> dict:
+    # UUID
+    match_uuid = re.search(r'([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})', texto)
+    uuid_val = match_uuid.group(1).upper() if match_uuid else ""
+    
+    # Control
+    match_control = re.search(r'(DTE-03-[A-Z0-9]+-\d{15})', texto)
+    control_val = match_control.group(1).upper() if match_control else ""
+    
+    # Fecha
+    match_fecha = re.search(r'(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})', texto)
+    fecha_val = match_fecha.group(1) if match_fecha else ""
+    
+    # Monto Total
+    match_total = re.search(r'(?:Monto total de la operaci.n|Monto Total de la Operaci.n)[\s:\$]*([\d,]+\.\d{2})', texto, re.IGNORECASE)
+    total_val = float(match_total.group(1).replace(',', '')) if match_total else 0.0
+    
+    # IVA
+    match_iva = re.search(r'(?:Impuesto al valor agregado|Valor del Tributo)[\s\S]{0,40}?[\$:\s]*([\d,]+\.\d{2})', texto, re.IGNORECASE)
+    iva_val = float(match_iva.group(1).replace(',', '')) if match_iva else 0.0
+    
+    # Subtotal
+    match_sub = re.search(r'(?:Sub-Total|Subtotal|Sub-total)[\s:\$]*([\d,]+\.\d{2})', texto, re.IGNORECASE)
+    subtotal = float(match_sub.group(1).replace(',', '')) if match_sub else (total_val - iva_val)
+    if subtotal < 0: subtotal = 0.0
+    
+    # Sello
+    match_sello = re.search(r'(?:Sello de Recepci.n|Sello Recepci.n|Sello de recepci.n)[\s:\n]*([A-Z0-9]{30,45})', texto, re.IGNORECASE)
+    sello_val = match_sello.group(1) if match_sello else ""
+    
+    return {
+        "identificacion": {
+            "codigoGeneracion": uuid_val,
+            "numeroControl": control_val,
+            "fecEmi": fecha_val,
+            "tipoDte": "03"
+        },
+        "emisor": {
+            "nrc": nrc,
+            "nit": nit,
+            "nombre": nombre
+        },
+        "receptor": {
+            "nombre": "TRANSPORTES EJECUTIVOS SHALOM,S.A DE C.V."
+        },
+        "resumen": {
+            "montoTotalOperacion": total_val,
+            "totalCompra": subtotal,
+            "ivaPerci1": 0.0,
+            "ivaRete1": 0.0,
+            "tributos": [
+                {"codigo": "20", "valor": iva_val}
+            ]
+        },
+        "selloRecibido": sello_val,
+        "estado_revision": "VALIDO",
+        "texto_crudo": f"Extraído por Molde Fast-Track {nombre}"
+    }
+
 def procesar_con_plantillas(texto: str) -> dict:
     """Punto de entrada para probar todas las plantillas. Retorna el JSON si hubo un 'match' exitoso, o None."""
     # 1. SHELL
@@ -152,4 +211,19 @@ def procesar_con_plantillas(texto: str) -> dict:
     if resultado:
         return resultado
         
+    # 3. AUTOFACIL
+    if "06141207971019" in texto or "AUTOFACIL" in texto.upper():
+        print("    [FAST-TRACK] Molde 'AUTOFACIL' activado.")
+        return extraer_plantilla_generica(texto, "0614-120797-101-9", "100801-3", "AUTOFACIL, S.A. DE C.V.")
+        
+    # 4. BANCO AGRICOLA
+    if "0614-310155-001-6" in texto or "BANCO AGRICOLA" in texto.upper():
+        print("    [FAST-TRACK] Molde 'BANCO AGRICOLA' activado.")
+        return extraer_plantilla_generica(texto, "0614-310155-001-6", "552-5", "BANCO AGRICOLA SA")
+        
+    # 5. JOSE ENRIQUE LEON GALDAMEZ
+    if "0405-060172-101-7" in texto or "LEON GALDAMEZ" in texto.upper():
+        print("    [FAST-TRACK] Molde 'JOSE ENRIQUE' activado.")
+        return extraer_plantilla_generica(texto, "0405-060172-101-7", "76829-4", "JOSE ENRIQUE LEON GALDAMEZ")
+
     return None

@@ -354,6 +354,15 @@ def procesar_cola():
             print(f"[Inteligencia Artificial] Falló OCR local en '{pdf.name}'. Enviando a Groq IA...")
             usar_gemini = True
         else:
+            # NIVEL 1.5: FAST-REJECT (Cortafuegos para descartar No-DTEs rápidos)
+            texto_upper = texto.upper()
+            if not any(kw in texto_upper for kw in ["DOCUMENTO TRIBUTARIO", "CREDITO FISCAL", "CRÉDITO FISCAL", "DTE-", "FACTURA", "COMPROBANTE"]):
+                print(f"    [FAST-REJECT] El documento '{pdf.name}' no parece ser un DTE. Descartando a Otros DTEs...")
+                from src.config import BASE_DIR
+                CARPETA_OTROS = BASE_DIR / 'data' / '09_otros_dtes'
+                shutil.move(str(pdf), str(CARPETA_OTROS / pdf.name))
+                continue
+                
             # NIVEL 2.5: FAST-TRACK (Plantillas Heurísticas para Proveedores Frecuentes)
             try:
                 from src.conversor_pdf.plantillas_frecuentes import procesar_con_plantillas

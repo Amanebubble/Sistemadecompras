@@ -553,6 +553,28 @@ def revision_reinject():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+@app.route('/api/revision/descartar', methods=['POST'])
+def revision_descartar():
+    try:
+        data = request.json
+        stem = data.get('stem')
+        if not stem:
+            return jsonify({"success": False, "error": "Falta el identificador (stem)"})
+            
+        pdf_name = data.get('pdf')
+        if pdf_name:
+            pdf_path_rev = CARPETA_REVISION / pdf_name
+            if pdf_path_rev.exists():
+                shutil.move(str(pdf_path_rev), str(CARPETA_OTROS_DTES / pdf_name))
+        
+        json_path = CARPETA_REVISION / f"{stem}.json"
+        if json_path.exists():
+            os.remove(str(json_path))
+            
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
 
 @app.route('/api/shutdown', methods=['POST', 'GET'])
 def shutdown():
