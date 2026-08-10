@@ -421,6 +421,32 @@
             </div>
         </section>
 
+        <!-- Resumen por Cuenta -->
+        <section class="animate-slide-up mb-8" style="animation-delay: 0.3s;">
+            <h3 class="text-xl font-semibold mb-4 text-gray-200 flex items-center">
+                <i class="fa-solid fa-users text-brand-400 mr-3"></i> Resumen por Cuenta (Ciclo Actual)
+            </h3>
+            <div class="glass-card rounded-xl p-4 overflow-hidden border-brand-500/20">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-300">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-900/50 border-b border-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 font-medium">Cuenta</th>
+                                <th scope="col" class="px-6 py-3 font-medium text-center">Nuevos Descargados</th>
+                                <th scope="col" class="px-6 py-3 font-medium text-center">Estado de Conexión</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuentas-tbody">
+                            <!-- Se llena por JS -->
+                            <tr>
+                                <td colspan="3" class="px-6 py-4 text-center text-gray-500 italic">Esperando inicio del ciclo...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <!-- Visual Console -->
         <section class="animate-slide-up" style="animation-delay: 0.4s;">
             <h3 class="text-xl font-semibold mb-4 text-gray-200 flex items-center">
@@ -901,6 +927,24 @@
                         consoleOut.innerHTML = data.logs.map(l => escapeHtml(l)).join('<br>');
                         const term = document.getElementById('terminalScroll');
                         term.scrollTop = term.scrollHeight;
+                    }
+
+                    // Actualizar tabla dinámica de cuentas
+                    if (data.estadisticas && data.estadisticas.cuentas) {
+                        const tbody = document.getElementById('cuentas-tbody');
+                        let html = '';
+                        for (const [nombre, stats] of Object.entries(data.estadisticas.cuentas)) {
+                            html += `
+                                <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                                    <td class="px-6 py-3 font-medium text-white">${escapeHtml(nombre)}</td>
+                                    <td class="px-6 py-3 text-center text-brand-300 font-bold">${stats.descargados || 0}</td>
+                                    <td class="px-6 py-3 text-center text-green-400"><i class="fa-solid fa-check-circle"></i> OK</td>
+                                </tr>
+                            `;
+                        }
+                        if (html) {
+                            tbody.innerHTML = html;
+                        }
                     }
                     
                     const fText = document.getElementById('factoryStatusText');

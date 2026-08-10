@@ -318,30 +318,30 @@ def procesar_cola():
         usar_gemini = False
         
         if not texto:
-            print("    [!] Ambos niveles fallaron. Intentando Nivel 3 (Groq IA)...")
+            print(f"[Inteligencia Artificial] Falló OCR local en '{pdf.name}'. Enviando a Groq IA...")
             usar_gemini = True
         else:
             datos_json = extraer_datos_regex(texto)
             if not datos_json["identificacion"]["codigoGeneracion"] or datos_json["emisor"]["nombre"] in ["Extraido de PDF", "Forzar_Revision"]:
-                print("    [!] Regex no extrajo datos críticos. Intentando Nivel 3 (Groq IA)...")
+                print(f"[Inteligencia Artificial] Regex incompleto en '{pdf.name}'. Enviando a Groq IA...")
                 usar_gemini = True
                 
         if usar_gemini:
             datos_json = extraer_con_groq(pdf)
             if not datos_json:
-                print("    [X] Extracción con Groq falló.")
+                print(f"[Inteligencia Artificial] [ERROR] Groq falló al procesar '{pdf.name}'")
                 registrar_error(pdf.name, "Todos los niveles (incluida la IA) fallaron.")
                 shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
                 ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
                 with open(ruta_json, 'w', encoding='utf-8') as f:
                     json.dump({"identificacion": {"codigoGeneracion": ""}, "emisor": {"nombre": "Fallo IA"}, "texto_crudo": ""}, f, ensure_ascii=False)
-                print("    [!] Enviado a Revisión Manual con JSON vacío.")
+                print(f"[Inteligencia Artificial] Documento '{pdf.name}' enviado a Revisión Manual.")
                 continue
                 
         try:
             # Verificar si Groq lo marcó como INVALIDO
             if datos_json.get("estado_revision") == "INVALIDO":
-                print("    [!] Documento INVALIDO detectado por IA. Moviendo a Otros DTEs.")
+                print(f"[Inteligencia Artificial] Documento '{pdf.name}' detectado como INVÁLIDO. Moviendo a Otros DTEs.")
                 from src.config import BASE_DIR
                 CARPETA_OTROS = BASE_DIR / 'data' / '09_otros_dtes'
                 shutil.move(str(pdf), str(CARPETA_OTROS / pdf.name))
@@ -356,7 +356,7 @@ def procesar_cola():
             codigo_gen = identificacion.get("codigoGeneracion")
             
             if not codigo_gen:
-                print("    [!] Faltan UUID. Enviado a Revisión Manual.")
+                print(f"[Inteligencia Artificial] Faltan UUID en '{pdf.name}'. Enviado a Revisión Manual.")
                 registrar_error(pdf.name, "No se encontró UUID en el texto extraído.")
                 shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
                 ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
@@ -366,7 +366,7 @@ def procesar_cola():
                 
             nombre_emisor = emisor.get("nombre", "")
             if nombre_emisor in ["Extraido de PDF", "Forzar_Revision", "", None]:
-                print("    [!] Faltan proveedor. Enviado a Revisión Manual.")
+                print(f"[Inteligencia Artificial] Falta proveedor en '{pdf.name}'. Enviado a Revisión Manual.")
                 registrar_error(pdf.name, "Proveedor desconocido.")
                 shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
                 ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
@@ -380,7 +380,7 @@ def procesar_cola():
             
             with open(ruta_json, 'w', encoding='utf-8') as f:
                 json.dump(datos_json, f, ensure_ascii=False, indent=2)
-            print(f"    [OK] Datos extraídos y enviados a cola0: {nombre_json}")
+            print(f"[Inteligencia Artificial] Datos extraídos con éxito: '{nombre_json}'")
             
             # Mover el PDF procesado a Respaldo
             destino_pdf = CARPETA_RESPALDO / pdf.name
@@ -390,7 +390,7 @@ def procesar_cola():
             shutil.move(str(pdf), str(destino_pdf))
 
         except Exception as e:
-            print(f"    [X] Error fatal procesando el PDF {pdf.name}: {e}")
+            print(f"[Inteligencia Artificial] [ERROR] Fallo crítico en '{pdf.name}': {e}")
             print(traceback.format_exc())
             registrar_error(pdf.name, f"Error fatal: {e}")
             try:

@@ -149,12 +149,12 @@ class Estandarizador:
         archivos = list(self.carpeta_cola0.glob('*.json'))
         for archivo in archivos:
             nombre_archivo = archivo.name
-            print(f"  Procesando: {nombre_archivo}")
             
             try:
                 with open(archivo, 'r', encoding='utf-8-sig') as f:
                     data = json.load(f)
             except Exception as e:
+                print(f"[Estandarizador] [ERROR] JSON corrupto en '{nombre_archivo}'. Movido a Revisión.")
                 self._mover_a_revision(archivo, f"Error al parsear JSON: {str(e)}")
                 self.errores += 1
                 continue
@@ -183,7 +183,6 @@ class Estandarizador:
                         # Convertir DDMMAAAA a YYYY-MM-DD
                         fecha = f"{fecha_raw[4:8]}-{fecha_raw[2:4]}-{fecha_raw[0:2]}"
                         datos_doc['fecha_emision'] = fecha
-                        print(f"    [INFO] Fecha extraída del nombre del archivo: {fecha}")
 
                 if not fecha:
                     faltantes.append("fecha_emision")
@@ -215,7 +214,7 @@ class Estandarizador:
                         shutil.copy2(str(archivo), str(archivo_destino))
                         archivo.unlink()
                         self.otros_dtes += 1
-                        print(f"    [i] DTE tipo {tipo_dte} omitido para compras. Movido a Otros DTEs: {nombre_archivo}")
+                        print(f"[Estandarizador] Omitido tipo {tipo_dte} (No Compra). Movido a Otros DTEs: '{nombre_archivo}'")
                         continue
 
                 # 5. Finanzas (Rechazar si el total es 0.00, ej. PDFs crudos sin mapeo financiero)
@@ -225,6 +224,7 @@ class Estandarizador:
                     faltantes.append("datos_financieros_faltantes (totales en 0)")
 
                 if faltantes:
+                    print(f"[Estandarizador] Faltan datos en '{nombre_archivo}': {', '.join(faltantes)}. A Revisión.")
                     self._mover_a_revision(archivo, f"Validación fallida, campos faltantes: {', '.join(faltantes)}")
                     self.revision += 1
                     continue
@@ -256,8 +256,10 @@ class Estandarizador:
                     )
 
                 self.procesados += 1
+                print(f"[Estandarizador] ¡Éxito! Documento '{nombre_archivo}' ingresado a la Base de Datos.")
 
             except Exception as e:
+                print(f"[Estandarizador] [ERROR] Falló procesamiento en '{nombre_archivo}': {e}")
                 self._mover_a_revision(archivo, f"Excepción durante procesamiento: {str(e)}")
                 self.errores += 1
                 if auditoria_registrar_error:
@@ -274,11 +276,6 @@ class Estandarizador:
         finally:
             if self.conexion:
                 self.conexion.close()
-
-        print(f"Resumen de Estandarización:")
-        print(f"  Procesados: {self.procesados}")
-        print(f"  Revisión Manual: {self.revision}")
-        print(f"  Errores: {self.errores}")
 
         return {
             "procesados": self.procesados,

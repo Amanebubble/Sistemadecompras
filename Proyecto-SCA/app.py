@@ -163,7 +163,8 @@ pipeline_status = {
         "excels_generados": 0,
         "errores_imap": 0,
         "errores_pdf": 0,
-        "errores_json": 0
+        "errores_json": 0,
+        "cuentas": {}
     }
 }
 
@@ -186,7 +187,8 @@ def run_pipeline_background():
         "excels_generados": 0,
         "errores_imap": 0,
         "errores_pdf": 0,
-        "errores_json": 0
+        "errores_json": 0,
+        "cuentas": {}
     }
 
     pipeline_status["nivel_semaforo"] = "active"
@@ -245,7 +247,28 @@ def run_pipeline_background():
                 elif fase == "conversor0_json":
                     pipeline_status["estadisticas"]["errores_json"] += 1
             
-            pipeline_status["logs"].append(line_stripped)
+            # Extraer cuenta si viene en el log para reporte visual
+            import re
+            cuenta_match = re.search(r'\[Conexión - (.*?)\]', line_stripped)
+            if cuenta_match:
+                nombre_c = cuenta_match.group(1)
+                if "cuentas" not in pipeline_status["estadisticas"]:
+                    pipeline_status["estadisticas"]["cuentas"] = {}
+                if nombre_c not in pipeline_status["estadisticas"]["cuentas"]:
+                    pipeline_status["estadisticas"]["cuentas"][nombre_c] = {"descargados": 0}
+                
+                if "Descargado" in line_stripped:
+                    pipeline_status["estadisticas"]["cuentas"][nombre_c]["descargados"] += 1
+
+            # Limpiar etiquetas técnicas para la consola visual
+            clean_log = re.sub(r'\[FASE:.*?\]', '', line_stripped)
+            clean_log = re.sub(r'\[SEMAFORO:.*?\]', '', clean_log)
+            clean_log = clean_log.strip()
+            
+            # Ocultar banners de fases redundantes
+            if clean_log and not clean_log.startswith("===") and "FASE " not in clean_log:
+                pipeline_status["logs"].append(clean_log)
+
             # Mantener solo los últimos 150 logs en memoria para la consola
             if len(pipeline_status["logs"]) > 150:
                 pipeline_status["logs"] = pipeline_status["logs"][-150:]

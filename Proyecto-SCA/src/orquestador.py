@@ -31,20 +31,14 @@ def hilo_imap():
     settings = cargar_settings()
     while _corriendo:
         try:
-            # Recargar cuentas en cada ciclo por si el usuario agregó una nueva desde la interfaz web
             cuentas = cargar_cuentas()
-            print("\n[SEMAFORO:active] === FASE 1: DESCARGA CORREOS ===")
-            print(f"[*] Se encontraron {len(cuentas)} cuentas configuradas en el sistema.")
-            print("[FASE:conection_service]")
+            print("[SEMAFORO:active][FASE:conection_service]")
             for config_cuenta in cuentas:
                 nombre_cuenta = config_cuenta.get("nombre", config_cuenta.get("usuario", "desconocido"))
-                print(f"\n>> Iniciando proceso para la cuenta: {nombre_cuenta} ({config_cuenta.get('protocolo', 'imap')})")
                 try:
                     resultado = procesar_cuenta_con_reintentos(config_cuenta, settings)
-                    if resultado:
-                        print(f"  Revisados: {resultado['revisados']} | Descargados: {resultado['descargados']}")
                 except Exception as e_cuenta:
-                    print(f"[SEMAFORO:account_error] Fallo en cuenta {nombre_cuenta}: {e_cuenta}")
+                    print(f"[SEMAFORO:account_error] [Error - {nombre_cuenta}] Fallo de conexión: {e_cuenta}")
                     registrar_error("Motor Stream (Cuenta)", nombre_cuenta, str(e_cuenta))
                     continue
             sleep_con_latido(15, "Conector IMAP")
@@ -55,8 +49,7 @@ def hilo_imap():
 def hilo_enrutador():
     while _corriendo:
         try:
-            print("\n[SEMAFORO:active] === FASE 2: ENRUTADOR ===")
-            print("[FASE:filtro_service]")
+            print("[SEMAFORO:active][FASE:filtro_service]")
             enrutador = Enrutador()
             enrutador.ejecutar()
             sleep_con_latido(5, "Enrutador")
@@ -67,8 +60,7 @@ def hilo_enrutador():
 def hilo_pdf():
     while _corriendo:
         try:
-            print("\n[SEMAFORO:active] === FASE 3: CONVERSOR PDF ===")
-            print("[FASE:conversor1_pdf]")
+            print("[SEMAFORO:active][FASE:conversor1_pdf]")
             extraer_pdfs()
             sleep_con_latido(5, "Conversor PDF")
         except Exception as e:
@@ -78,8 +70,7 @@ def hilo_pdf():
 def hilo_json():
     while _corriendo:
         try:
-            print("\n[SEMAFORO:active] === FASE 4: ESTANDARIZADOR (JSON a SQL) ===")
-            print("[FASE:conversor0_json]")
+            print("[SEMAFORO:active][FASE:conversor0_json]")
             estandarizador = Estandarizador()
             estandarizador.conexion = _inicializar_bd(str(estandarizador.ruta_bd))
             estandarizador.procesar_cola()
@@ -108,24 +99,20 @@ def hilo_reportes():
                 sleep_con_latido(30, "Generador Reportes")
                 continue
                 
-            print("\n[SEMAFORO:active] === FASE 5: ACTUALIZANDO REPORTES BETA ===")
-            print("[FASE:reportes_beta]")
+            print("[SEMAFORO:active][FASE:reportes_beta]")
             
             cursor.execute("SELECT DISTINCT cliente, ano, mes FROM libro_compras")
             combinaciones = cursor.fetchall()
             
-            # Solo iteramos si hay combinaciones para que no imprima vacio
             if combinaciones:
                 for cliente, ano, mes in combinaciones:
                     gen.generar_reporte(cliente, ano, mes)
                 
-                # Global
                 cursor.execute("SELECT DISTINCT ano, mes FROM libro_compras")
                 fechas_globales = cursor.fetchall()
                 for ano, mes in fechas_globales:
                     gen.generar_reporte(None, ano, mes)
                     
-                print("  -> Reportes Beta regenerados.")
             conn.close()
             sleep_con_latido(60, "Generador Reportes")
         except Exception as e:

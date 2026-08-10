@@ -126,7 +126,8 @@ class Enrutador:
             else:
                 sobrevivientes.append(archivo)
                 
-        print(f"Prefiltro: {self.contadores['duplicados']} duplicados encontrados.")
+        if self.contadores["duplicados"] > 0:
+            print(f"[Enrutador] Descartados {self.contadores['duplicados']} archivos duplicados.")
         return sobrevivientes
 
     def _paso_0_emparejar(self):
@@ -157,7 +158,8 @@ class Enrutador:
             else:
                 pdfs_huerfanos.append(pdf)
                 
-        print(f"Paso 0: {self.contadores['respaldo']} PDFs emparejados.")
+        if self.contadores["respaldo"] > 0:
+            print(f"[Enrutador] Emparejados y respaldados {self.contadores['respaldo']} PDFs.")
         return pdfs_huerfanos
 
     def _clasificar_archivos(self, pdfs_huerfanos: list):
@@ -167,7 +169,6 @@ class Enrutador:
         for j in jsons:
             if not j.exists():
                 continue
-            print(f"  Procesando: {j.name}")
             identificador = self._extraer_identificador(j.name)
             try:
                 with open(j, 'r', encoding='utf-8-sig') as f:
@@ -198,6 +199,7 @@ class Enrutador:
             if tipo_dte and tipo_dte not in self.tipos_dte_validos:
                 self._mover(j, self.carpeta_otros)
                 self.contadores["otros"] += 1
+                print(f"[Enrutador] Archivo '{j.name}' movido a Otros DTEs (No deducible)")
                 
                 # Intentar mover el PDF de respaldo si existe
                 if identificador and identificador != "NONE":
@@ -206,6 +208,7 @@ class Enrutador:
             else:
                 self._mover(j, self.carpeta_cola0)
                 self.contadores["cola0"] += 1
+                print(f"[Enrutador] Documento '{j.name}' movido a Cola JSON (cola0)")
                 
                 # Registrar como procesado
                 if identificador and identificador != "NONE":
@@ -220,9 +223,9 @@ class Enrutador:
         for pdf in pdfs_huerfanos:
             # Los PDFs huérfanos van a cola1 para OCR/conversor
             if pdf.exists():
-                print(f"  Procesando: {pdf.name}")
                 self._mover(pdf, self.carpeta_cola1)
                 self.contadores["cola1"] += 1
+                print(f"[Enrutador] Documento '{pdf.name}' movido a Cola PDF (cola1)")
             
             import time
             time.sleep(1.5)
@@ -237,9 +240,6 @@ class Enrutador:
         finally:
             if self.conexion:
                 self.conexion.close()
-                
-        print("\nResumen final del proceso:")
-        for clave, valor in self.contadores.items():
-            print(f"- {clave.capitalize()}: {valor}")
             
         return self.contadores
+

@@ -211,7 +211,7 @@ class GestorDTE:
                         codigo_generacion_mensaje,
                     ]
                 )
-                print(f"  -> [{nombre_cuenta}] Descargado: {ruta_destino}")
+                print(f"[Conexión - {nombre_cuenta}] Descargado documento '{nombre_final}'")
                 encontro_algo = True
                 descargados += 1
 
