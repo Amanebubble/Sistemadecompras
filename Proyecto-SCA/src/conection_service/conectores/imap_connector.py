@@ -63,6 +63,7 @@ class IMAPConnector(MailConnector):
         candidatos = []
         criterio = "ALL"
 
+        print(f"  [Conexión] Obteniendo lista de correos desde el servidor IMAP (esto puede tardar si hay miles)...")
         # headers_only=True descarga solo asunto, remitente, uid, etc. (muy rápido)
         for msg in self._mailbox.fetch(criterio, mark_seen=False, headers_only=True):
             message_id = msg.headers.get('message-id', [msg.uid])[0]
