@@ -138,8 +138,7 @@ def ejecutar_stream():
         threading.Thread(target=hilo_imap, daemon=True),
         threading.Thread(target=hilo_enrutador, daemon=True),
         threading.Thread(target=hilo_pdf, daemon=True),
-        threading.Thread(target=hilo_json, daemon=True),
-        threading.Thread(target=hilo_reportes, daemon=True)
+        threading.Thread(target=hilo_json, daemon=True)
     ]
     
     for h in hilos:

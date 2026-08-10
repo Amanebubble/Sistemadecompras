@@ -84,7 +84,14 @@ class GmailOAuthConnector(MailConnector):
                 flow = InstalledAppFlow.from_client_secrets_file(
                         credentials_path, SCOPES
                 )
-                creds = flow.run_local_server(port=0)
+                
+                # Aumentar temporalmente el timeout a 5 minutos (300s) para que el usuario pueda iniciar sesión tranquilo
+                old_timeout = socket.getdefaulttimeout()
+                socket.setdefaulttimeout(300)
+                try:
+                    creds = flow.run_local_server(port=0)
+                finally:
+                    socket.setdefaulttimeout(old_timeout)
 
             with open(token_path, "w") as token_file:
                 token_file.write(creds.to_json())
