@@ -34,14 +34,14 @@ class IMAPConnector(MailConnector):
         # si el usuario no especificó otra carpeta.
         if "gmail.com" in servidor.lower() and carpeta == "INBOX":
             try:
-                self._mailbox = MailBox(servidor, port=puerto, timeout=30).login(
+                self._mailbox = MailBox(servidor, port=puerto, timeout=120).login(
                     usuario, password, initial_folder="[Gmail]/Todos"
                 )
                 print(f"  [Conexión] Autodetectada carpeta '[Gmail]/Todos'")
                 return
             except Exception:
                 try:
-                    self._mailbox = MailBox(servidor, port=puerto, timeout=30).login(
+                    self._mailbox = MailBox(servidor, port=puerto, timeout=120).login(
                         usuario, password, initial_folder="[Gmail]/All Mail"
                     )
                     print(f"  [Conexión] Autodetectada carpeta '[Gmail]/All Mail'")
@@ -50,7 +50,7 @@ class IMAPConnector(MailConnector):
                     pass
 
         # Fallback normal
-        self._mailbox = MailBox(servidor, port=puerto, timeout=30).login(
+        self._mailbox = MailBox(servidor, port=puerto, timeout=120).login(
             usuario, password, initial_folder=carpeta
         )
         print(f"  [Conexión] Usando carpeta '{carpeta}'")
