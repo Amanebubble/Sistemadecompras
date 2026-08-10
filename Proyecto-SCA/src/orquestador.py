@@ -29,14 +29,16 @@ def sleep_con_latido(segundos, nombre_hilo):
 
 def hilo_imap():
     settings = cargar_settings()
-    cuentas = cargar_cuentas()
     while _corriendo:
         try:
-            print("\n[SEMAFORO:active] === FASE 1: DESCARGA IMAP ===")
+            # Recargar cuentas en cada ciclo por si el usuario agregó una nueva desde la interfaz web
+            cuentas = cargar_cuentas()
+            print("\n[SEMAFORO:active] === FASE 1: DESCARGA CORREOS ===")
+            print(f"[*] Se encontraron {len(cuentas)} cuentas configuradas en el sistema.")
             print("[FASE:conection_service]")
             for config_cuenta in cuentas:
                 nombre_cuenta = config_cuenta.get("nombre", config_cuenta.get("usuario", "desconocido"))
-                print(f"\nProcesando cuenta: {nombre_cuenta}")
+                print(f"\n>> Iniciando proceso para la cuenta: {nombre_cuenta} ({config_cuenta.get('protocolo', 'imap')})")
                 try:
                     resultado = procesar_cuenta_con_reintentos(config_cuenta, settings)
                     if resultado:

@@ -3,6 +3,11 @@
 Este archivo mantiene un historial de todos los cambios, correcciones de errores (bugs) y nuevas características del Sistema de Compras Automatizado (SCA). 
 Útil para mantener el contexto del programa y evitar alucinaciones en futuros desarrollos.
 
+## [v1.9.3] - 2026-08-10
+### Corregido y Mejorado
+- **Reconocimiento Dinámico de Cuentas**: Se corrigió un bug lógico en el `orquestador.py` que impedía detectar cuentas nuevas agregadas mientras el motor estaba corriendo. Ahora el sistema recarga la base de datos de cuentas en cada ciclo, detectando instantáneamente cualquier cuenta nueva de OAuth o IMAP que agregues.
+- **Registros (Logs) de Autorización más Claros**: Se añadieron mensajes explícitos en la consola para avisar cuando el sistema se detiene a esperar tu autorización en el navegador web (Google OAuth) y cuando está buscando correos en toda tu cuenta.
+
 ## [v1.9.2] - 2026-08-10
 ### Cambios y Mejoras
 - **Diferenciación de Ventas vs Compras**: Se actualizó el cerebro de la Inteligencia Artificial (`extractor_pdf.py`) para que extraiga explícitamente tanto los datos del **Emisor** como los del **Receptor**. Esto permitirá en el futuro que el sistema separe las facturas emitidas por la propia empresa (Ventas) de las recibidas (Compras).

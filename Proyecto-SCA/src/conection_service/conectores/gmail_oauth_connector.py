@@ -89,7 +89,10 @@ class GmailOAuthConnector(MailConnector):
                 old_timeout = socket.getdefaulttimeout()
                 socket.setdefaulttimeout(300)
                 try:
+                    print("\n[!] ATENCIÓN: Se requiere autorización de Google.")
+                    print("[!] Por favor, revisa tu navegador web. Tienes 5 minutos para iniciar sesión y permitir el acceso.")
                     creds = flow.run_local_server(port=0)
+                    print("[*] Autorización completada con éxito.")
                 finally:
                     socket.setdefaulttimeout(old_timeout)
 
@@ -105,6 +108,7 @@ class GmailOAuthConnector(MailConnector):
     def listar_candidatos(self):
         candidatos = []
         query = "has:attachment"
+        print("  [*] Buscando correos con adjuntos en toda la cuenta de Google (incluyendo archivados)...")
 
         siguiente_pagina = None
         while True:
