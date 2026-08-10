@@ -34,14 +34,14 @@ class IMAPConnector(MailConnector):
         # si el usuario no especificó otra carpeta.
         if "gmail.com" in servidor.lower() and carpeta == "INBOX":
             try:
-                self._mailbox = MailBox(servidor, port=puerto, timeout=120).login(
+                self._mailbox = MailBox(servidor, port=puerto, timeout=600).login(
                     usuario, password, initial_folder="[Gmail]/Todos"
                 )
                 print(f"  [Conexión] Autodetectada carpeta '[Gmail]/Todos'")
                 return
             except Exception:
                 try:
-                    self._mailbox = MailBox(servidor, port=puerto, timeout=120).login(
+                    self._mailbox = MailBox(servidor, port=puerto, timeout=600).login(
                         usuario, password, initial_folder="[Gmail]/All Mail"
                     )
                     print(f"  [Conexión] Autodetectada carpeta '[Gmail]/All Mail'")
@@ -50,7 +50,7 @@ class IMAPConnector(MailConnector):
                     pass
 
         # Fallback normal
-        self._mailbox = MailBox(servidor, port=puerto, timeout=120).login(
+        self._mailbox = MailBox(servidor, port=puerto, timeout=600).login(
             usuario, password, initial_folder=carpeta
         )
         print(f"  [Conexión] Usando carpeta '{carpeta}'")
@@ -60,12 +60,41 @@ class IMAPConnector(MailConnector):
             self._mailbox.logout()
 
     def listar_candidatos(self):
-        candidatos = []
-        criterio = "ALL"
+        import json
+        import os
+        from pathlib import Path
+        
+        estado_file = Path(__file__).resolve().parent.parent / "estado_imap.json"
+        estado_data = {}
+        if estado_file.exists():
+            try:
+                with open(estado_file, "r", encoding="utf-8") as f:
+                    estado_data = json.load(f)
+            except Exception:
+                pass
+                
+        cuenta_id = f"{self.config['usuario']}_{self._mailbox.folder.get()}"
+        ultimo_uid = estado_data.get(cuenta_id, 1)
 
-        print(f"  [Conexión] Obteniendo lista de correos desde el servidor IMAP (esto puede tardar si hay miles)...")
+        candidatos = []
+        if ultimo_uid > 1:
+            criterio = f"UID {ultimo_uid}:*"
+            print(f"  [Conexión] Sincronización Incremental (UID {ultimo_uid} en adelante)...")
+        else:
+            criterio = "ALL"
+            print(f"  [Conexión] Sincronización Masiva Histórica detectada. Obteniendo TODOS los correos (puede tardar varios minutos)...")
+
+        max_uid_visto = ultimo_uid
+
         # headers_only=True descarga solo asunto, remitente, uid, etc. (muy rápido)
         for msg in self._mailbox.fetch(criterio, mark_seen=False, headers_only=True):
+            try:
+                current_uid = int(msg.uid)
+                if current_uid > max_uid_visto:
+                    max_uid_visto = current_uid
+            except ValueError:
+                pass
+                
             message_id = msg.headers.get('message-id', [msg.uid])[0]
             if isinstance(message_id, bytes):
                 message_id = message_id.decode('utf-8', errors='ignore')
@@ -90,6 +119,16 @@ class IMAPConnector(MailConnector):
                     message_id=message_id,
                 )
             )
+            
+        # Guardar el nuevo estado si vimos algo nuevo
+        if max_uid_visto > ultimo_uid:
+            estado_data[cuenta_id] = max_uid_visto
+            try:
+                with open(estado_file, "w", encoding="utf-8") as f:
+                    json.dump(estado_data, f, ensure_ascii=False, indent=4)
+            except Exception as e:
+                print(f"  [!] Error guardando estado IMAP: {e}")
+
         return candidatos
 
     def obtener_adjuntos(self, mensaje: MensajeNormalizado):
