@@ -251,8 +251,12 @@ def extraer_con_groq(ruta_pdf: Path) -> dict:
                 "tipoDte": "<03, 05, 06 o 14>"
             }},
             "emisor": {{
-                "nombre": "<Nombre del proveedor>",
+                "nombre": "<Nombre del EMISOR (Quien emite la factura)>",
                 "nrc": "<NRC>"
+            }},
+            "receptor": {{
+                "nombre": "<Nombre del RECEPTOR (A quien se le emite la factura)>",
+                "nit": "<NIT del Receptor, si lo tiene>"
             }},
             "resumen": {{
                 "montoTotalOperacion": <flotante, total general>,

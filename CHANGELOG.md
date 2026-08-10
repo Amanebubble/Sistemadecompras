@@ -3,6 +3,11 @@
 Este archivo mantiene un historial de todos los cambios, correcciones de errores (bugs) y nuevas características del Sistema de Compras Automatizado (SCA). 
 Útil para mantener el contexto del programa y evitar alucinaciones en futuros desarrollos.
 
+## [v1.9.2] - 2026-08-10
+### Cambios y Mejoras
+- **Diferenciación de Ventas vs Compras**: Se actualizó el cerebro de la Inteligencia Artificial (`extractor_pdf.py`) para que extraiga explícitamente tanto los datos del **Emisor** como los del **Receptor**. Esto permitirá en el futuro que el sistema separe las facturas emitidas por la propia empresa (Ventas) de las recibidas (Compras).
+- **Ampliación de Filtro de Búsqueda**: Se eliminó la lista estricta de palabras clave obligatorias ("DTE", "Factura", etc.) al agregar una nueva cuenta. Ahora el sistema descargará cualquier correo que contenga un PDF, delegando la responsabilidad a la IA para discernir si es o no un documento válido, evitando que se pierdan facturas mal tituladas.
+
 ## [v1.9.1] - 2026-08-10
 ### Corregido
 - **Timeout en Autenticación OAuth**: Se aumentó el tiempo de espera de la conexión temporalmente a 5 minutos (300s) cuando se lanza el navegador web para iniciar sesión en cuentas de Google. Así el usuario tiene tiempo suficiente para autorizar los permisos sin que el sistema aborte prematuramente por el timeout predeterminado de 15 segundos.

@@ -660,10 +660,7 @@ def config_add_account():
         # Sanitizar nombre para generar la variable de entorno
         env_key = "PASS_" + nombre
 
-        palabras_clave = [
-            "DTE", "factura", "CCF", "comprobante",
-            "documento tributario", "documento electrónico", "documento electronico"
-        ]
+        palabras_clave = []
 
         if auth_method == "oauth2":
             # --- Flujo OAuth2 (Gmail) ---
