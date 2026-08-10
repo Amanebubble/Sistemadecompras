@@ -78,16 +78,40 @@ class IMAPConnector(MailConnector):
 
         candidatos = []
         if ultimo_uid > 1:
-            criterio = f"UID {ultimo_uid}:*"
+            criterio_busqueda = f"UID {ultimo_uid}:*"
             print(f"  [Conexión] Sincronización Incremental (UID {ultimo_uid} en adelante)...")
         else:
-            criterio = "ALL"
-            print(f"  [Conexión] Sincronización Masiva Histórica detectada. Obteniendo TODOS los correos (puede tardar varios minutos)...")
+            criterio_busqueda = "ALL"
+            print(f"  [Conexión] Sincronización Masiva Histórica detectada.")
 
+        print(f"  [Conexión] Obteniendo lista de UIDs desde el servidor IMAP...")
+        
+        try:
+            # Obtener solo la lista de IDs (extremadamente rápido, incluso para 100,000 correos)
+            todos_los_uids = self._mailbox.uids(criterio_busqueda)
+        except Exception as e:
+            print(f"  [!] Error obteniendo UIDs: {e}")
+            return []
+            
+        # Filtrar estrictamente mayores al ultimo_uid y ordenar
+        uids_nuevos = [u for u in todos_los_uids if int(u) > ultimo_uid]
+        uids_nuevos.sort(key=int)
+        
+        if not uids_nuevos:
+            return []
+            
+        # Para evitar timeouts, procesamos en bloques de 1000 correos por ciclo
+        TAMANO_BLOQUE = 1000
+        bloque_uids = uids_nuevos[:TAMANO_BLOQUE]
+        
+        print(f"  [Conexión] Hay {len(uids_nuevos)} correos pendientes. Descargando cabeceras del primer bloque de {len(bloque_uids)}...")
+        
+        # Usar formato de rango (UID inicio:fin) para no exceder el límite de caracteres de IMAP
+        criterio_fetch = f"UID {bloque_uids[0]}:{bloque_uids[-1]}"
         max_uid_visto = ultimo_uid
 
-        # headers_only=True descarga solo asunto, remitente, uid, etc. (muy rápido)
-        for msg in self._mailbox.fetch(criterio, mark_seen=False, headers_only=True):
+        # headers_only=True descarga solo asunto, remitente, uid, etc. (rápido en bloques pequeños)
+        for msg in self._mailbox.fetch(criterio_fetch, mark_seen=False, headers_only=True):
             try:
                 current_uid = int(msg.uid)
                 if current_uid > max_uid_visto:
