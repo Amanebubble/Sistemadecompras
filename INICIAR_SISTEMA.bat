@@ -11,7 +11,7 @@ cd /d "%~dp0"
 
 :: Verificar si Python esta instalado
 python --version >nul 2>&1
-if %errorlevel% neq 0 (
+if errorlevel 1 (
     echo [ERROR] Python no esta instalado o no esta en el PATH de esta computadora.
     echo Por favor instala Python 3 ^(preferiblemente 3.10 o superior^) y marca la opcion "Add Python to PATH" durante la instalacion.
     echo Puedes descargarlo desde: https://www.python.org/downloads/
@@ -22,36 +22,33 @@ if %errorlevel% neq 0 (
 :: Ingresar al directorio del proyecto
 cd Proyecto-SCA
 
-:: Verificar si el venv existe y funciona (comprobando si Flask puede importarse)
-set REBUILD_VENV=0
-if not exist "venv\Scripts\activate.bat" (
-    set REBUILD_VENV=1
-) else (
-    :: Activar y probar si el venv funciona en esta PC
-    call venv\Scripts\activate.bat
-    python -c "import flask" >nul 2>&1
-    if %errorlevel% neq 0 (
-        echo [ADVERTENCIA] El entorno virtual parece estar corrupto o es de otra PC.
-        set REBUILD_VENV=1
-    )
+:: Si el venv no existe, ir directamente a reconstruirlo
+if not exist "venv\Scripts\activate.bat" goto rebuild_venv
+
+:: Si existe, intentar activarlo y comprobar si funciona
+call venv\Scripts\activate.bat
+python -c "import flask" >nul 2>&1
+if errorlevel 1 (
+    echo [ADVERTENCIA] El entorno virtual parece estar corrupto o es de otra PC.
+    goto rebuild_venv
 )
 
-if %REBUILD_VENV%==1 (
-    echo [INFO] Configurando entorno virtual para esta computadora...
-    if exist "venv" (
-        echo [INFO] Borrando entorno virtual anterior...
-        rmdir /s /q venv
-    )
-    python -m venv venv
-    
-    echo [INFO] Activando entorno...
-    call venv\Scripts\activate.bat
-    
-    echo [INFO] Instalando dependencias ^(puede tardar unos minutos^)...
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-)
+:: Si llego hasta aqui, el entorno esta sano
+goto start_app
 
+:rebuild_venv
+echo [INFO] Configurando entorno virtual para esta computadora...
+if exist "venv" (
+    echo [INFO] Borrando entorno virtual anterior...
+    rmdir /s /q venv
+)
+python -m venv venv
+call venv\Scripts\activate.bat
+echo [INFO] Instalando dependencias ^(puede tardar unos minutos^)...
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+:start_app
 echo [INFO] Iniciando la aplicacion...
 :: La aplicacion app.py se encargara de abrir el navegador automaticamente
 python app.py
