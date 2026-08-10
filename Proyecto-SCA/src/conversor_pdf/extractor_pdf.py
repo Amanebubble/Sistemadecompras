@@ -216,6 +216,38 @@ def extraer_datos_regex(texto: str) -> dict:
         "texto_crudo": texto
     }
 
+def extraer_texto_ocr_nivel_4(ruta_pdf: Path) -> str:
+    """Nivel 4: Convierte el PDF a imagen de alta resolución y aplica OCR local usando RapidOCR."""
+    try:
+        import fitz
+        from rapidocr import RapidOCR
+        import logging
+        
+        # Ocultar logs excesivos de RapidOCR
+        logging.getLogger("RapidOCR").setLevel(logging.ERROR)
+        
+        ocr = RapidOCR()
+        doc = fitz.open(str(ruta_pdf))
+        texto_total = ""
+        
+        print(f"    [*] Nivel 4 OCR: Analizando {len(doc)} páginas con RapidOCR (Local)...")
+        for i, page in enumerate(doc):
+            pix = page.get_pixmap(dpi=200)
+            img_bytes = pix.tobytes("png")
+            result, elapse = ocr(img_bytes)
+            if result:
+                for line in result:
+                    texto_total += line[1] + "\n"
+                    
+        return texto_total
+    except ImportError:
+        print("    [!] Error: Librerías PyMuPDF (fitz) o rapidocr no están instaladas.")
+        return ""
+    except Exception as e:
+        print(f"    [!] Error en Nivel 4 OCR: {e}")
+        return ""
+
+
 def extraer_con_groq(ruta_pdf: Path) -> dict:
     global ultimo_llamado_gemini
     
@@ -231,8 +263,14 @@ def extraer_con_groq(ruta_pdf: Path) -> dict:
         
         texto_pdf = extraer_texto_nivel_1(ruta_pdf)
         if not texto_pdf.strip():
-            print("    [X] pdfplumber no pudo extraer texto para enviárselo a Groq (probablemente sea una imagen pura).")
-            return None
+            print("    [X] pdfplumber no pudo extraer texto. Activando Nivel 4 (OCR Inteligente Local)...")
+            texto_pdf = extraer_texto_ocr_nivel_4(ruta_pdf)
+            
+            if not texto_pdf.strip():
+                print("    [X] Nivel 4 (OCR) también falló. Documento ilegible o dañado.")
+                return None
+            else:
+                print("    [OK] Nivel 4 (OCR) rescató el texto con éxito.")
             
         print("    [*] Analizando texto con Groq (llama-3.3-70b-versatile)...")
         api_key = os.environ.get("GROQ_API_KEY")
