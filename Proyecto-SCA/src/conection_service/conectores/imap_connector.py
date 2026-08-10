@@ -107,11 +107,16 @@ class IMAPConnector(MailConnector):
         print(f"  [Conexión] Hay {len(uids_nuevos)} correos pendientes. Descargando cabeceras del primer bloque de {len(bloque_uids)}...")
         
         # Usar formato de rango (UID inicio:fin) para no exceder el límite de caracteres de IMAP
-        criterio_fetch = f"UID {bloque_uids[0]}:{bloque_uids[-1]}"
+        from imap_tools import AND
+        criterio_fetch = AND(uid=f"{bloque_uids[0]}:{bloque_uids[-1]}")
         max_uid_visto = ultimo_uid
+
+        print(f"  [DEBUG] Criterio fetch generado: {criterio_fetch.format()}")
+        encontrados = 0
 
         # headers_only=True descarga solo asunto, remitente, uid, etc. (rápido en bloques pequeños)
         for msg in self._mailbox.fetch(criterio_fetch, mark_seen=False, headers_only=True):
+            encontrados += 1
             try:
                 current_uid = int(msg.uid)
                 if current_uid > max_uid_visto:
@@ -144,6 +149,8 @@ class IMAPConnector(MailConnector):
                 )
             )
             
+        print(f"  [DEBUG] Cabeceras recuperadas por IMAP: {encontrados}")
+
         # Guardar el nuevo estado si vimos algo nuevo
         if max_uid_visto > ultimo_uid:
             estado_data[cuenta_id] = max_uid_visto
