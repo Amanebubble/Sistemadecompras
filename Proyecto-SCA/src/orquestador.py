@@ -32,9 +32,14 @@ def hilo_imap():
     while _corriendo:
         try:
             cuentas = cargar_cuentas()
-            # Eliminado print con FASE
+            if cuentas:
+                print(f"\n[Conexión] Escaneando {len(cuentas)} cuenta(s) configurada(s)...")
+            else:
+                print(f"\n[Conexión] No hay cuentas configuradas en accounts.json.")
+                
             for config_cuenta in cuentas:
                 nombre_cuenta = config_cuenta.get("nombre", config_cuenta.get("usuario", "desconocido"))
+                print(f"  -> Revisando cuenta: {nombre_cuenta} ({config_cuenta.get('protocolo', 'Desconocido')})")
                 try:
                     resultado = procesar_cuenta_con_reintentos(config_cuenta, settings)
                 except Exception as e_cuenta:
