@@ -69,10 +69,20 @@ class GestorDTE:
     # -- filtros --
 
     def _asunto_coincide(self, asunto: str) -> bool:
-        if not self.palabras_clave_asunto:
-            return True
+        # Palabras clave globales maestras para buscar DTEs en cualquier cuenta.
+        # Ya no dependemos de que el usuario lo escriba bien en cada cuenta.
+        palabras_maestras = [
+            "dte", "documento electronico", "documento electrónico",
+            "documento tributario", "facturacion electronica", 
+            "facturación electrónica", "credito fiscal", "crédito fiscal",
+            "factura", "comprobante", "emisión", "emision", "adjunto", "envio"
+        ]
+        
+        # Si el usuario agregó extra, las sumamos
+        siempre_validas = set(palabras_maestras + (self.palabras_clave_asunto or []))
+        
         asunto_lower = (asunto or "").lower()
-        return any(p.lower() in asunto_lower for p in self.palabras_clave_asunto)
+        return any(p.lower() in asunto_lower for p in siempre_validas)
 
     def _es_json_dte_valido(self, contenido_bytes):
         try:
