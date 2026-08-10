@@ -124,9 +124,13 @@ class IMAPConnector(MailConnector):
             except ValueError:
                 pass
                 
-            message_id = msg.headers.get('message-id', [msg.uid])[0]
-            if isinstance(message_id, bytes):
-                message_id = message_id.decode('utf-8', errors='ignore')
+            message_id_raw = msg.headers.get('message-id', [msg.uid])[0]
+            if isinstance(message_id_raw, bytes):
+                message_id_raw = message_id_raw.decode('utf-8', errors='ignore')
+            
+            # PARCHE: Inyectar UID para garantizar que el ID es siempre único
+            # aun si el proveedor envía cientos de correos con el mismo Message-ID
+            message_id = f"{msg.uid}-{message_id_raw}"
 
             import email.utils
             from datetime import datetime

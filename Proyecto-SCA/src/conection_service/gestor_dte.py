@@ -187,7 +187,9 @@ class GestorDTE:
                 # Usar el código compartido del mensaje, o 'none' como fallback
                 identificador = codigo_generacion_mensaje or "none"
 
-                base_nombre = self._nombre_archivo_seguro(f"{nombre_cuenta}_{identificador}_{mensaje.fecha}")
+                # PARCHE: Inyectar el UID del correo (mensaje.id_interno) en el nombre del archivo
+                # para evitar sobrescrituras y ayudar en el rastreo
+                base_nombre = self._nombre_archivo_seguro(f"{nombre_cuenta}_UID{mensaje.id_interno}_{identificador}_{mensaje.fecha}")
                 nombre_final = f"{base_nombre}.{extension}"
                 ruta_destino = os.path.join(self.carpeta_descargas, nombre_final)
                 
