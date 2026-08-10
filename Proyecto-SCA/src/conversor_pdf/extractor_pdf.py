@@ -14,9 +14,13 @@ import shutil
 import traceback
 from pathlib import Path
 from datetime import datetime
+import time
 
 import pdfplumber
 from markitdown import MarkItDown
+from groq import Groq
+
+ultimo_llamado_gemini = 0
 
 # ── Rutas dinámicas ────────────────────────────────────────────────────────
 import sys
@@ -212,6 +216,74 @@ def extraer_datos_regex(texto: str) -> dict:
         "texto_crudo": texto
     }
 
+def extraer_con_groq(ruta_pdf: Path) -> dict:
+    global ultimo_llamado_gemini
+    
+    # Rate limit: 15 segundos entre llamadas
+    ahora = time.time()
+    if ahora - ultimo_llamado_gemini < 15:
+        time.sleep(15 - (ahora - ultimo_llamado_gemini))
+        
+    ultimo_llamado_gemini = time.time()
+    
+    try:
+        print("    [*] Extrayendo texto con pdfplumber para enviarlo a Groq...")
+        
+        texto_pdf = extraer_texto_nivel_1(ruta_pdf)
+        if not texto_pdf.strip():
+            print("    [X] pdfplumber no pudo extraer texto para enviárselo a Groq (probablemente sea una imagen pura).")
+            return None
+            
+        print("    [*] Analizando texto con Groq (llama-3.3-70b-versatile)...")
+        api_key = os.environ.get("GROQ_API_KEY")
+        client = Groq(api_key=api_key)
+        
+        prompt = f"""
+        Eres un experto extrayendo datos de documentos. Extrae los siguientes datos del siguiente texto de un DTE y devuélvelos en formato JSON estricto.
+        IMPORTANTE: Si el documento NO es un DTE válido de El Salvador (tipos permitidos: 03, 05, 06, 14), o es ilegible, o no tiene relación con facturación, añade la clave "estado_revision" con el valor "INVALIDO". De lo contrario, pon "VALIDO".
+        
+        Formato JSON esperado:
+        {{
+            "identificacion": {{
+                "codigoGeneracion": "<UUID de 36 caracteres>",
+                "numeroControl": "<Ej. DTE-03-...>",
+                "fecEmi": "<fecha de emisión>",
+                "tipoDte": "<03, 05, 06 o 14>"
+            }},
+            "emisor": {{
+                "nombre": "<Nombre del proveedor>",
+                "nrc": "<NRC>"
+            }},
+            "resumen": {{
+                "montoTotalOperacion": <flotante, total general>,
+                "totalCompra": <flotante, subtotal o total sujeto a iva>,
+                "totalExenta": <flotante>,
+                "ivaPerci1": <flotante>,
+                "ivaRete1": <flotante>,
+                "tributos": [
+                    {{"codigo": "20", "valor": <flotante, el IVA>}}
+                ]
+            }},
+            "selloRecibido": "<sello de recepción>",
+            "estado_revision": "VALIDO" o "INVALIDO",
+            "texto_crudo": "Extraído por Groq IA"
+        }}
+        
+        Texto del PDF:
+        {texto_pdf}
+        """
+        
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        
+        texto_res = response.choices[0].message.content.strip()
+        return json.loads(texto_res)
+    except Exception as e:
+        print(f"    [X] Error en Groq AI: {e}")
+        return None
 
 def procesar_cola():
     """Procesa todos los PDFs pendientes en cola1."""
@@ -238,37 +310,58 @@ def procesar_cola():
             print("    [!] MarkItDown no extrajo texto. Intentando Nivel 2 (pdfplumber)...")
             texto = extraer_texto_nivel_1(pdf)
             
+        datos_json = None
+        usar_gemini = False
+        
         if not texto:
-            print("    [X] No se pudo extraer texto del PDF.")
-            registrar_error(pdf.name, "Ambos niveles de extracción fallaron o texto vacío.")
-            shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
-            ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
+            print("    [!] Ambos niveles fallaron. Intentando Nivel 3 (Groq IA)...")
+            usar_gemini = True
+        else:
+            datos_json = extraer_datos_regex(texto)
+            if not datos_json["identificacion"]["codigoGeneracion"] or datos_json["emisor"]["nombre"] in ["Extraido de PDF", "Forzar_Revision"]:
+                print("    [!] Regex no extrajo datos críticos. Intentando Nivel 3 (Groq IA)...")
+                usar_gemini = True
+                
+        if usar_gemini:
+            datos_json = extraer_con_groq(pdf)
+            if not datos_json:
+                print("    [X] Extracción con Groq falló.")
+                registrar_error(pdf.name, "Todos los niveles (incluida la IA) fallaron.")
+                shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
+                ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
+                with open(ruta_json, 'w', encoding='utf-8') as f:
+                    json.dump({"identificacion": {"codigoGeneracion": ""}, "emisor": {"nombre": "Fallo IA"}, "texto_crudo": ""}, f, ensure_ascii=False)
+                print("    [!] Enviado a Revisión Manual con JSON vacío.")
+                continue
+                
+        # Verificar si Groq lo marcó como INVALIDO
+        if datos_json.get("estado_revision") == "INVALIDO":
+            print("    [!] Documento INVALIDO detectado por IA. Moviendo a Otros DTEs.")
+            from src.config import BASE_DIR
+            CARPETA_OTROS = BASE_DIR / 'data' / '09_otros_dtes'
+            shutil.move(str(pdf), str(CARPETA_OTROS / pdf.name))
+            ruta_json = CARPETA_OTROS / pdf.with_suffix(".json").name
             with open(ruta_json, 'w', encoding='utf-8') as f:
-                json.dump({"identificacion": {"codigoGeneracion": ""}, "emisor": {"nombre": "Fallo Texto"}, "texto_crudo": ""}, f, ensure_ascii=False)
-            print("    [!] Enviado a Revisión Manual con JSON parcial vacío.")
+                json.dump(datos_json, f, ensure_ascii=False, indent=2)
             continue
             
-        # Extracción de datos
-        datos_json = extraer_datos_regex(texto)
-        
+        # Validación final por si se omitió INVALIDO pero faltan datos
         if not datos_json["identificacion"]["codigoGeneracion"]:
-            print("    [!] No se encontró UUID válido en el texto.")
+            print("    [!] Faltan UUID. Enviado a Revisión Manual.")
             registrar_error(pdf.name, "No se encontró UUID en el texto extraído.")
             shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
             ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
             with open(ruta_json, 'w', encoding='utf-8') as f:
                 json.dump(datos_json, f, ensure_ascii=False, indent=2)
-            print("    [!] Enviado a Revisión Manual por falta de UUID.")
             continue
             
         if datos_json["emisor"]["nombre"] in ["Extraido de PDF", "Forzar_Revision"]:
-            print("    [!] Faltan datos críticos del proveedor o finanzas complejas (Revisión manual requerida).")
-            registrar_error(pdf.name, "No se encontró proveedor en BD o finanzas complejas no extraíbles.")
+            print("    [!] Faltan proveedor. Enviado a Revisión Manual.")
+            registrar_error(pdf.name, "Proveedor desconocido.")
             shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
             ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
             with open(ruta_json, 'w', encoding='utf-8') as f:
                 json.dump(datos_json, f, ensure_ascii=False, indent=2)
-            print("    [!] Enviado a Revisión Manual por proveedor desconocido o finanzas complejas.")
             continue
             
         # Guardar el JSON en cola0

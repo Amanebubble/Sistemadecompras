@@ -4,7 +4,10 @@
 
 # 1. Dashboard Web y Orquestador (app.py)
 Flask==3.0.3
-Werkzeug==3.0.3
+Werkzeug==3.0.1
+pdfplumber
+markitdown
+groq
 python-dotenv==1.0.1  
 
 # 2. Motor de Base de Datos y Excel (excel_services)

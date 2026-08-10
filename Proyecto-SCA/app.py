@@ -255,13 +255,17 @@ def run_pipeline_background():
             orquestador_process.wait()
             
     except Exception as e:
-        pipeline_status["logs"].append(f"[!] Excepción crítica: {str(e)}")
-        pipeline_status["error"] = True
-        pipeline_status["estado_general"] = "Completado con errores"
-        pipeline_status["nivel_semaforo"] = "critical"
+        if pipeline_status["activo"]:
+            pipeline_status["logs"].append(f"[!] Excepción crítica: {str(e)}")
+            pipeline_status["error"] = True
+            pipeline_status["estado_general"] = "Completado con errores"
+            pipeline_status["nivel_semaforo"] = "critical"
         
     pipeline_status["fase"] = "Detenido"
-    pipeline_status["logs"].append("Pipeline detenido.")
+    if not pipeline_status["activo"] and not pipeline_status.get("error"):
+        pipeline_status["logs"].append("Motor detenido manualmente.")
+    else:
+        pipeline_status["logs"].append("Pipeline detenido.")
     pipeline_status["terminado"] = True
     pipeline_status["activo"] = False
     pipeline_status["estado_general"] = "Inactivo"
@@ -334,9 +338,22 @@ def get_report_options():
         conn = sqlite3.connect(RUTA_BD_CONTROL)
         cursor = conn.cursor()
         
+        # Filtrar por cuentas activas en accounts.json
+        import json
+        cuentas_activas = []
+        try:
+            with open(SRC_DIR / 'conection_service' / 'accounts.json', 'r', encoding='utf-8') as f:
+                cuentas_data = json.load(f)
+                cuentas_activas = [acc.get("nombre") for acc in cuentas_data if acc.get("nombre")]
+        except:
+            pass
+            
         # Obtener clientes únicos
         cursor.execute("SELECT DISTINCT cliente FROM libro_compras WHERE cliente IS NOT NULL AND cliente != '' ORDER BY cliente")
         clientes = [row[0] for row in cursor.fetchall()]
+        
+        if cuentas_activas:
+            clientes = [c for c in clientes if c in cuentas_activas]
         
         if not clientes:
             return jsonify({"success": True, "clientes": []})
@@ -454,26 +471,22 @@ def revision_reinject():
         data = request.json
         stem = data.get('stem')
         if not stem:
-            return jsonify({"success": False, "error": "Missing stem"})
+            return jsonify({"success": False, "error": "Falta el identificador (stem)"})
             
-        # Build Hacienda native JSON format
-        hacienda_json = {
+        json_path = CARPETA_REVISION / f"{stem}.json"
+        
+        nuevo_json = {
             "identificacion": {
-                "codigoGeneracion": str(data.get("codigoGeneracion", "")).strip(),
-                "numeroControl": str(data.get("numeroControl", "")).strip(),
-                "fecEmi": str(data.get("fecEmi", "")).strip(),
-                "tipoDte": str(data.get("tipoDte", "")).strip()
+                "codigoGeneracion": data.get('codigoGeneracion', '').upper(),
+                "numeroControl": data.get('numeroControl', '').upper(),
+                "fecEmi": data.get('fecEmi', ''),
+                "tipoDte": data.get('tipoDte', '03')
             },
             "emisor": {
-                "nrc": str(data.get("nrc", "")).strip(),
-                "nombre": str(data.get("nombre", "")).strip()
+                "nombre": data.get('nombre', ''),
+                "nrc": data.get('nrc', '')
             },
             "resumen": {
-                "totalCompra": float(data.get("subTotal") or 0.0),
-                "totalGravada": float(data.get("subTotal") or 0.0),
-                "totalExenta": float(data.get("exentos") or 0.0),
-                "ivaPerci1": float(data.get("ivaPercibido") or 0.0),
-                "ivaRete1": float(data.get("ivaRetenido") or 0.0),
                 "montoTotalOperacion": float(data.get("totalGeneral") or 0.0),
                 "tributos": [
                     {"codigo": "20", "valor": float(data.get("iva") or 0.0)},
@@ -748,6 +761,35 @@ if __name__ == '__main__':
     # Inicia un hilo que espera 1.5s antes de abrir el navegador
     Timer(1.5, abrir_navegador).start()
     
-    app.run(debug=True, use_reloader=False, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
 
+from flask import send_file, send_from_directory
 
+@app.route('/api/otros_dtes/list')
+def otros_dtes_list():
+    carpeta = BASE_DIR / 'data' / '09_otros_dtes'
+    if not carpeta.exists():
+        return jsonify({"archivos": []})
+    
+    archivos = list(carpeta.glob('*.pdf'))
+    archivos_info = []
+    for f in archivos:
+        archivos_info.append({
+            "name": f.name,
+            "size": f.stat().st_size
+        })
+    return jsonify({"archivos": archivos_info})
+
+@app.route('/api/otros_dtes/file/<path:filename>')
+def otros_dtes_file(filename):
+    carpeta = BASE_DIR / 'data' / '09_otros_dtes'
+    if (carpeta / filename).exists():
+        return send_from_directory(str(carpeta), filename)
+    return "File not found", 404
+
+@app.route('/api/otros_dtes/download/<path:filename>')
+def otros_dtes_download(filename):
+    carpeta = BASE_DIR / 'data' / '09_otros_dtes'
+    if (carpeta / filename).exists():
+        return send_file(str(carpeta / filename), as_attachment=True, download_name=filename)
+    return "File not found", 404

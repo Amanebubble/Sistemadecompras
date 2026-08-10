@@ -133,31 +133,47 @@
         <div class="absolute bottom-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 mix-blend-screen filter blur-[120px] opacity-60 animate-blob animation-delay-4000"></div>
     </div>
 
-    <!-- Main Content -->
-    <div class="relative z-10 container mx-auto px-4 py-10 max-w-7xl">
-        
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-center mb-12 animate-fade-in">
-            <div>
-                <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-2">SCA <span class="gradient-text">Pipeline</span></h1>
-                <p class="text-gray-400 text-lg">Sistema de Compras Automatizado - Panel de Control</p>
+    <!-- Layout con Sidebar -->
+    <div class="relative z-10 flex min-h-screen w-full">
+        <!-- Sidebar Navigation -->
+        <aside class="w-20 md:w-64 border-r border-gray-800 bg-dark-900/80 backdrop-blur-md shrink-0 flex flex-col items-center md:items-stretch py-8 transition-all duration-300 shadow-2xl">
+            <div class="mb-10 px-0 md:px-6 text-center md:text-left">
+                <h1 class="text-2xl font-bold tracking-tight hidden md:block">SCA <span class="gradient-text">Pipeline</span></h1>
+                <h1 class="text-2xl font-bold tracking-tight md:hidden">SCA</h1>
             </div>
-            <div class="mt-6 md:mt-0 flex space-x-4">
-                <button onclick="openAccountConfig()" class="glass-panel hover:bg-gray-800 text-gray-300 transition-colors px-5 py-2.5 rounded-lg flex items-center space-x-2 text-sm font-medium border border-brand-500/30 hover:border-brand-400/60">
-                    <i class="fa-solid fa-envelope-circle-check text-brand-400"></i>
-                    <span>Cuentas</span>
+            
+            <nav class="flex-1 px-3 space-y-3 w-full">
+                <button onclick="openAccountConfig()" class="w-full flex items-center justify-center md:justify-start space-x-0 md:space-x-3 px-3 py-3 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors border border-transparent hover:border-brand-500/30 group relative">
+                    <i class="fa-solid fa-envelope-circle-check text-xl md:text-lg group-hover:text-brand-400"></i>
+                    <span class="hidden md:inline font-medium text-sm">Cuentas</span>
                 </button>
-                <button onclick="openExplorer()" class="glass-panel hover:bg-gray-800 text-gray-300 transition-colors px-5 py-2.5 rounded-lg flex items-center space-x-2 text-sm font-medium">
-                    <i class="fa-regular fa-folder-open text-brand-400"></i>
-                    <span>Abrir Minería</span>
+                <button onclick="openOtrosDtesStation()" class="w-full flex items-center justify-center md:justify-start space-x-0 md:space-x-3 px-3 py-3 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors border border-transparent hover:border-yellow-500/30 group relative">
+                    <i class="fa-solid fa-file-circle-xmark text-xl md:text-lg group-hover:text-yellow-400"></i>
+                    <span class="hidden md:inline font-medium text-sm">Otros DTEs</span>
                 </button>
-                <button onclick="openReportesPanel()" class="glass-panel hover:bg-gray-800 text-gray-300 transition-colors px-5 py-2.5 rounded-lg flex items-center space-x-2 text-sm font-medium border border-blue-500/30 hover:border-blue-400/60" title="Generar Libro de Compras">
-                    <i class="fa-solid fa-file-excel text-blue-400"></i>
-                    <span class="hidden md:inline">Reportes</span>
+                <button onclick="openReportesPanel()" class="w-full flex items-center justify-center md:justify-start space-x-0 md:space-x-3 px-3 py-3 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors border border-transparent hover:border-blue-500/30 group relative">
+                    <i class="fa-solid fa-file-excel text-xl md:text-lg group-hover:text-blue-400"></i>
+                    <span class="hidden md:inline font-medium text-sm">Reportes</span>
                 </button>
+                
+                <div class="my-4 border-t border-gray-800/50 w-full mx-auto hidden md:block"></div>
+                
+                <!-- Revisión Manual Botón Lateral -->
+                <button onclick="openReviewStation()" class="w-full flex items-center justify-center md:justify-start space-x-0 md:space-x-3 px-3 py-3 rounded-lg bg-orange-900/10 hover:bg-orange-900/30 text-orange-400 transition-colors border border-orange-500/20 group relative mt-4">
+                    <i class="fa-solid fa-triangle-exclamation text-xl md:text-lg animate-pulse"></i>
+                    <span class="hidden md:inline font-medium text-sm">Revisión Manual</span>
+                    <span id="sidebar-stat-revision" class="hidden md:inline-flex items-center justify-center ml-auto bg-orange-500/20 text-orange-300 font-bold text-xs px-2 py-0.5 rounded-full border border-orange-500/30">-</span>
+                </button>
+            </nav>
+        </aside>
 
-            </div>
-        </header>
+        <!-- Main Content Area -->
+        <main class="flex-1 px-4 md:px-10 py-10 max-w-6xl mx-auto w-full max-h-screen overflow-y-auto">
+            <!-- Header Mobile / Title -->
+            <header class="mb-10 animate-fade-in">
+                <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-white">Panel de Control</h2>
+                <p class="text-gray-400 text-lg">Orquestador del Sistema de Compras</p>
+            </header>
 
         <!-- Main Action Section -->
         <section class="mb-14 animate-slide-up" style="animation-delay: 0.1s;">
@@ -207,68 +223,116 @@
 
         <!-- Stats Grid -->
         <section class="mb-14">
-            <h3 class="text-xl font-semibold mb-6 text-gray-200 flex items-center animate-slide-up" style="animation-delay: 0.2s;">
-                <i class="fa-solid fa-chart-pie text-blue-400 mr-3"></i> Estado de Carpetas (Pipeline)
-                <button onclick="updateStats()" class="ml-4 text-sm text-gray-500 hover:text-brand-400 transition-colors" title="Actualizar">
-                    <i class="fa-solid fa-rotate"></i>
-                </button>
-            </h3>
+            <div class="flex justify-between items-end mb-6">
+                <h3 class="text-xl font-semibold text-gray-200 flex items-center animate-slide-up" style="animation-delay: 0.2s;">
+                    <i class="fa-solid fa-chart-pie text-blue-400 mr-3"></i> Estado de Carpetas (Pipeline)
+                    <button onclick="updateStats()" class="ml-4 text-sm text-gray-500 hover:text-brand-400 transition-colors" title="Actualizar">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                </h3>
+            </div>
             
             
-        <!-- Animated Flow Diagram -->
-        <div id="factoryAnimation" class="w-full h-24 bg-gray-900/50 rounded-xl border border-gray-700/50 relative overflow-hidden mb-8 opacity-50 transition-opacity duration-500 flex items-center justify-between px-4 md:px-12">
+        <!-- Animated Flow Diagram (Circuit) -->
+        <div id="factoryAnimation" class="w-full h-28 bg-gray-900/80 rounded-xl border border-gray-700/80 relative overflow-hidden mb-8 opacity-50 transition-opacity duration-500 flex items-center justify-between px-4 md:px-12 shadow-inner">
             <style>
-                @keyframes flowPulse {
-                    0% { transform: translateX(-100%); opacity: 0; }
-                    50% { opacity: 1; }
-                    100% { transform: translateX(100%); opacity: 0; }
+                @keyframes dashFlow {
+                    from { stroke-dashoffset: 20; }
+                    to { stroke-dashoffset: 0; }
                 }
-                .animate-flow-pulse { animation: flowPulse 2s infinite linear; }
+                .circuit-line {
+                    background-image: linear-gradient(to right, #2DD4BF 50%, transparent 50%);
+                    background-size: 15px 2px;
+                    background-repeat: repeat-x;
+                    background-position: 0 center;
+                    opacity: 0.1;
+                }
+                .circuit-line.active {
+                    opacity: 1;
+                    animation: flowPulseBg 0.3s linear infinite;
+                    box-shadow: 0 0 15px rgba(45,212,191,0.5);
+                }
+                .node-active {
+                    border-color: #2DD4BF !important;
+                    box-shadow: 0 0 20px rgba(45,212,191,0.6) !important;
+                    transform: scale(1.1);
+                }
+                .node-active i {
+                    color: #2DD4BF !important;
+                }
+                @keyframes flowPulseBg {
+                    from { background-position: 15px center; }
+                    to { background-position: 0 center; }
+                }
             </style>
+            <!-- Audio Context Logic -->
+            <script>
+                let audioCtx = null;
+                function playRadarBeep() {
+                    try {
+                        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        if (audioCtx.state === 'suspended') audioCtx.resume();
+                        const osc = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+                        gainNode.gain.setValueAtTime(0.02, audioCtx.currentTime); 
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+                        osc.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.15);
+                    } catch(e) {}
+                }
+            </script>
             <!-- Nodes -->
-            <div class="flex flex-col items-center z-10">
-                <div id="node-imap" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+            <div class="flex flex-col items-center z-10 w-24">
+                <div id="node-imap" class="node-box w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300 relative">
                     <i id="icon-node-imap" class="fa-solid fa-cloud-arrow-down text-gray-400 text-lg transition-colors duration-300"></i>
                 </div>
-                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">IMAP</span>
+                <div class="mt-2 text-center">
+                    <div class="text-[10px] font-bold text-gray-300 tracking-wider">IMAP</div>
+                    <div class="text-[8px] text-gray-500 mt-0.5">Lector Buzones</div>
+                </div>
             </div>
             
-            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full">
-                <div class="absolute inset-0 bg-brand-500 hidden animate-flow-pulse" id="flow-1"></div>
-            </div>
+            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full circuit-line" id="flow-1"></div>
             
-            <div class="flex flex-col items-center z-10">
-                <div id="node-enrutador" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+            <div class="flex flex-col items-center z-10 w-24">
+                <div id="node-enrutador" class="node-box w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300 relative">
                     <i id="icon-node-enrutador" class="fa-solid fa-code-branch text-gray-400 text-lg transition-colors duration-300"></i>
                 </div>
-                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">ENRUTADOR</span>
+                <div class="mt-2 text-center">
+                    <div class="text-[10px] font-bold text-gray-300 tracking-wider">ENRUTADOR</div>
+                    <div class="text-[8px] text-gray-500 mt-0.5">Clasificador</div>
+                </div>
             </div>
 
-            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full">
-                <div class="absolute inset-0 bg-brand-500 hidden animate-flow-pulse" id="flow-2"></div>
-            </div>
+            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full circuit-line" id="flow-2"></div>
             
-            <div class="flex flex-col items-center z-10">
-                <div id="node-pdf" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+            <div class="flex flex-col items-center z-10 w-24">
+                <div id="node-pdf" class="node-box w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300 relative">
                     <i id="icon-node-pdf" class="fa-regular fa-file-pdf text-gray-400 text-lg transition-colors duration-300"></i>
                 </div>
-                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">PDF OCR</span>
+                <div class="mt-2 text-center">
+                    <div class="text-[10px] font-bold text-gray-300 tracking-wider">PDF OCR</div>
+                    <div class="text-[8px] text-gray-500 mt-0.5">Extracción</div>
+                </div>
             </div>
 
-            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full">
-                <div class="absolute inset-0 bg-brand-500 hidden animate-flow-pulse" id="flow-3"></div>
-            </div>
+            <div class="flex-1 h-0.5 bg-gray-700 relative mx-2 z-0 overflow-hidden rounded-full circuit-line" id="flow-3"></div>
             
-            <div class="flex flex-col items-center z-10">
-                <div id="node-sql" class="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300">
+            <div class="flex flex-col items-center z-10 w-24">
+                <div id="node-sql" class="node-box w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center shadow-lg transition-all duration-300 relative">
                     <i id="icon-node-sql" class="fa-solid fa-database text-gray-400 text-lg transition-colors duration-300"></i>
                 </div>
-                <span class="text-[10px] font-mono mt-2 text-gray-500 tracking-wider">SQL BD</span>
+                <div class="mt-2 text-center">
+                    <div class="text-[10px] font-bold text-gray-300 tracking-wider">SQL BD</div>
+                    <div class="text-[8px] text-gray-500 mt-0.5">Almacenamiento</div>
+                </div>
             </div>
             
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300" id="factoryStatusTextWrapper">
-                <span class="bg-gray-900/90 px-3 py-1 rounded text-gray-500 font-mono text-sm uppercase tracking-widest border border-gray-800" id="factoryStatusText">Motor Apagado</span>
-            </div>
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300" id="factoryStatusTextWrapper" style="display: none;"></div>
         </div>
 
               <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-slide-up" style="animation-delay: 0.3s;">
@@ -353,18 +417,6 @@
                           <span class="text-sm text-gray-400 font-medium">archivos</span>
                       </div>
                   </div>
-
-                  <div class="glass-card rounded-xl p-5 relative overflow-hidden group border-orange-500/20 cursor-pointer hover:bg-orange-900/10" onclick="openReviewStation()">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i class="fa-solid fa-triangle-exclamation text-5xl text-orange-400"></i>
-                    </div>
-                    <p class="text-sm font-medium text-orange-300 mb-1">Atención</p>
-                    <p class="text-xs text-gray-500 mb-3 truncate">Revision_Manual</p>
-                    <div class="flex items-end space-x-2">
-                        <span class="text-3xl font-bold text-white" id="stat-revision">-</span>
-                        <span class="text-xs text-gray-500 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">archivos (Clic)</span>
-                    </div>
-                </div>
 
             </div>
         </section>
@@ -563,7 +615,7 @@
         </div>
     </div>
 
-    <!-- Estación de Revisión Manual (Modal Full Screen) -->
+    <!-- Estación de Revisión Manual -->
     <div id="reviewStation" class="fixed inset-0 z-50 bg-dark-900/95 backdrop-blur-md hidden flex-col">
         <header class="flex flex-col md:flex-row justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
             <h2 class="text-xl font-bold text-white flex items-center mb-4 md:mb-0">
@@ -853,24 +905,39 @@
                     
                     const fText = document.getElementById('factoryStatusText');
                     
-                    document.getElementById('flow-1').classList.add('hidden');
-                    document.getElementById('flow-2').classList.add('hidden');
-                    document.getElementById('flow-3').classList.add('hidden');
+                    document.querySelectorAll('.circuit-line').forEach(el => el.classList.remove('active'));
+                    document.querySelectorAll('.node-box').forEach(el => el.classList.remove('node-active'));
                     
                     if (data.activo) {
-                        fText.textContent = `Fase: ${data.fase || 'Procesando'}`;
+                        if (fText) fText.textContent = `Fase: ${data.fase || 'Procesando'}`;
                         document.getElementById('factoryAnimation').classList.remove('opacity-50');
                         
+                        let currentPhase = 0;
                         const faseL = data.fase.toLowerCase();
                         if (faseL.includes('conection') || faseL.includes('orquestador') || faseL.includes('iniciando')) {
-                            document.getElementById('flow-1').classList.remove('hidden');
+                            document.getElementById('node-imap').classList.add('node-active');
+                            document.getElementById('flow-1').classList.add('active');
+                            currentPhase = 1;
                         } else if (faseL.includes('conversor1') || faseL.includes('pdf')) {
-                            document.getElementById('flow-2').classList.remove('hidden');
+                            document.getElementById('node-enrutador').classList.add('node-active');
+                            document.getElementById('flow-2').classList.add('active');
+                            document.getElementById('node-pdf').classList.add('node-active');
+                            currentPhase = 2;
                         } else if (faseL.includes('conversor0') || faseL.includes('json') || faseL.includes('generador')) {
-                            document.getElementById('flow-3').classList.remove('hidden');
+                            document.getElementById('node-pdf').classList.add('node-active');
+                            document.getElementById('flow-3').classList.add('active');
+                            document.getElementById('node-sql').classList.add('node-active');
+                            currentPhase = 3;
+                        }
+                        
+                        // Play beep only when transitioning phase or keeping it active
+                        if (window.lastPhase !== currentPhase) {
+                            playRadarBeep();
+                            window.lastPhase = currentPhase;
                         }
                     } else {
-                        fText.textContent = "Motor Apagado";
+                        window.lastPhase = 0;
+                        if (fText) fText.textContent = 'Motor Apagado';
                         document.getElementById('factoryAnimation').classList.add('opacity-50');
                         clearInterval(enginePollInterval);
                         isEngineRunning = false;
@@ -955,13 +1022,14 @@
             }
             
             const caso = revisionCases[index];
-            document.getElementById('reviewCounter').textContent = `Caso ${index + 1} de ${revisionCases.length}`;
+            document.getElementById('reviewCounter').textContent = `Documento ${index + 1}/${revisionCases.length}`;
             
             // Cargar PDF
             const pdfViewer = document.getElementById('pdfViewer');
             const pdfOverlay = document.getElementById('pdfOverlay');
             if (caso.pdf) {
                 pdfViewer.src = `/api/revision/file/${encodeURIComponent(caso.pdf)}#toolbar=0&navpanes=0&scrollbar=0`;
+                pdfOverlay.classList.remove('hidden');
                 pdfOverlay.classList.add('hidden');
             } else {
                 pdfViewer.src = "";
@@ -1438,14 +1506,20 @@
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
-                document.getElementById('count_cola0').innerText = data.cola0 || 0;
-                document.getElementById('count_cola1').innerText = data.cola1 || 0;
-                document.getElementById('count_procesados').innerText = data.procesados || 0;
-                document.getElementById('count_errores').innerText = data.errores || 0;
-                document.getElementById('count_historico').innerText = data.historico || 0;
-                if(document.getElementById('count_otros_dtes')) {
-                    document.getElementById('count_otros_dtes').innerText = data.otros_dtes || 0;
-                }
+                
+                const updateText = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = val;
+                };
+
+                updateText('stat-cola0', data.cola0 || 0);
+                updateText('stat-cola1', data.cola1 || 0);
+                updateText('stat-procesados', data.procesados || 0);
+                updateText('stat-errores', data.errores || 0);
+                updateText('stat-historico', data.historico || 0);
+                updateText('sidebar-stat-revision', data.revision_count || 0);
+                updateText('count_otros_dtes', data.otros_dtes || 0);
+                
             } catch (e) {
                 console.error(e);
             }
@@ -1477,7 +1551,155 @@
                 console.error("Error comprobando estado inicial:", err);
             }
         });
-</script>
+        // ==========================================
+        // Visor de Otros DTEs
+        // ==========================================
+        let currentOtrosDtesList = [];
+        let currentOtrosDteFilename = null;
+        let currentOtrosTab = 'pdf';
 
+        function openOtrosDtesStation() {
+            document.getElementById('otrosDtesStation').classList.remove('hidden');
+            document.getElementById('otrosDtesStation').classList.add('flex');
+            loadOtrosDtesList();
+        }
+
+        function closeOtrosDtesStation() {
+            document.getElementById('otrosDtesStation').classList.add('hidden');
+            document.getElementById('otrosDtesStation').classList.remove('flex');
+            document.getElementById('otrosPdfViewer').src = '';
+            document.getElementById('otrosPdfViewer').classList.add('hidden');
+            document.getElementById('otrosJsonViewer').classList.add('hidden');
+            document.getElementById('otrosPdfEmpty').classList.remove('hidden');
+            document.getElementById('btnDownloadOtros').classList.add('hidden');
+            document.getElementById('otrosDtesTabs').classList.add('hidden');
+            currentOtrosDteFilename = null;
+        }
+
+        async function loadOtrosDtesList() {
+            try {
+                const res = await fetch('/api/otros_dtes/list');
+                const data = await res.json();
+                currentOtrosDtesList = data.archivos || [];
+                
+                document.getElementById('otrosDtesCountText').textContent = 
+                    `${currentOtrosDtesList.length} archivo${currentOtrosDtesList.length !== 1 ? 's' : ''}`;
+                    
+                renderOtrosDtesList();
+            } catch (error) {
+                console.error("Error loading otros DTEs:", error);
+            }
+        }
+
+        function renderOtrosDtesList() {
+            const container = document.getElementById('otrosDtesList');
+            container.innerHTML = '';
+            
+            if (currentOtrosDtesList.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center">
+                        <i class="fa-solid fa-check-circle text-3xl text-green-500 mb-3 opacity-50"></i>
+                        <p class="text-sm text-gray-500">No hay documentos inválidos.</p>
+                    </div>`;
+                return;
+            }
+            
+            currentOtrosDtesList.forEach(file => {
+                const isSelected = file.name === currentOtrosDteFilename;
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-lg cursor-pointer transition-colors border ${isSelected ? 'bg-brand-500/10 border-brand-500/30' : 'bg-dark-800 border-gray-800 hover:border-gray-600'}`;
+                
+                const sizeKb = (file.size / 1024).toFixed(1);
+                
+                div.innerHTML = `
+                    <div class="flex items-start">
+                        <i class="fa-regular fa-file-pdf mt-1 mr-3 ${isSelected ? 'text-brand-400' : 'text-gray-500'}"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-300'} truncate" title="${file.name}">
+                                ${file.name}
+                            </p>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-xs text-gray-500">${sizeKb} KB</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                div.onclick = () => selectOtrosDte(file.name);
+                container.appendChild(div);
+            });
+        }
+
+        function switchOtrosDtesTab(tab) {
+            currentOtrosTab = tab;
+            
+            const btnPdf = document.getElementById('tabOtrosPdf');
+            const btnJson = document.getElementById('tabOtrosJson');
+            const viewerPdf = document.getElementById('otrosPdfViewer');
+            const viewerJson = document.getElementById('otrosJsonViewer');
+            
+            if (tab === 'pdf') {
+                btnPdf.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-brand-500/20 text-brand-400 border border-brand-500/30";
+                btnJson.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-transparent text-gray-400 hover:text-white hover:bg-gray-800 border border-transparent";
+                viewerJson.classList.add('hidden');
+                viewerPdf.classList.remove('hidden');
+            } else {
+                btnJson.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-brand-500/20 text-brand-400 border border-brand-500/30";
+                btnPdf.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-transparent text-gray-400 hover:text-white hover:bg-gray-800 border border-transparent";
+                viewerPdf.classList.add('hidden');
+                viewerJson.classList.remove('hidden');
+                
+                // Fetch and display JSON content
+                if (currentOtrosDteFilename) {
+                    const jsonName = currentOtrosDteFilename.replace('.pdf', '.json');
+                    fetch(`/api/otros_dtes/file/${encodeURIComponent(jsonName)}`)
+                        .then(res => res.ok ? res.text() : 'No se encontró archivo JSON.')
+                        .then(text => {
+                            viewerJson.textContent = text;
+                        })
+                        .catch(err => {
+                            viewerJson.textContent = 'Error al cargar JSON: ' + err;
+                        });
+                }
+            }
+        }
+
+        function selectOtrosDte(filename) {
+            currentOtrosDteFilename = filename;
+            renderOtrosDtesList();
+            
+            document.getElementById('otrosPdfEmpty').classList.add('hidden');
+            document.getElementById('otrosDtesTabs').classList.remove('hidden');
+            document.getElementById('btnDownloadOtros').classList.remove('hidden');
+            
+            const iframe = document.getElementById('otrosPdfViewer');
+            const loader = document.getElementById('otrosPdfLoading');
+            
+            // Si está en tab pdf cargamos iframe
+            iframe.src = `/api/otros_dtes/file/${encodeURIComponent(filename)}`;
+            
+            if (currentOtrosTab === 'pdf') {
+                loader.classList.remove('hidden');
+                iframe.classList.add('hidden');
+                iframe.onload = () => {
+                    loader.classList.add('hidden');
+                    iframe.classList.remove('hidden');
+                };
+            } else {
+                switchOtrosDtesTab('json');
+            }
+        }
+
+        function downloadCurrentOtrosDte() {
+            if (!currentOtrosDteFilename) return;
+            let filename = currentOtrosDteFilename;
+            if (currentOtrosTab === 'json') {
+                filename = filename.replace('.pdf', '.json');
+            }
+            const url = `/api/otros_dtes/download/${encodeURIComponent(filename)}`;
+            window.location.href = url;
+        }
+        
+    </script>
 </body>
 </html>
