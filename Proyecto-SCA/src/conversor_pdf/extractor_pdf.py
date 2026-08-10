@@ -334,41 +334,46 @@ def procesar_cola():
                 print("    [!] Enviado a Revisión Manual con JSON vacío.")
                 continue
                 
-        # Verificar si Groq lo marcó como INVALIDO
-        if datos_json.get("estado_revision") == "INVALIDO":
-            print("    [!] Documento INVALIDO detectado por IA. Moviendo a Otros DTEs.")
-            from src.config import BASE_DIR
-            CARPETA_OTROS = BASE_DIR / 'data' / '09_otros_dtes'
-            shutil.move(str(pdf), str(CARPETA_OTROS / pdf.name))
-            ruta_json = CARPETA_OTROS / pdf.with_suffix(".json").name
-            with open(ruta_json, 'w', encoding='utf-8') as f:
-                json.dump(datos_json, f, ensure_ascii=False, indent=2)
-            continue
-            
-        # Validación final por si se omitió INVALIDO pero faltan datos
-        if not datos_json["identificacion"]["codigoGeneracion"]:
-            print("    [!] Faltan UUID. Enviado a Revisión Manual.")
-            registrar_error(pdf.name, "No se encontró UUID en el texto extraído.")
-            shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
-            ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
-            with open(ruta_json, 'w', encoding='utf-8') as f:
-                json.dump(datos_json, f, ensure_ascii=False, indent=2)
-            continue
-            
-        if datos_json["emisor"]["nombre"] in ["Extraido de PDF", "Forzar_Revision"]:
-            print("    [!] Faltan proveedor. Enviado a Revisión Manual.")
-            registrar_error(pdf.name, "Proveedor desconocido.")
-            shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
-            ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
-            with open(ruta_json, 'w', encoding='utf-8') as f:
-                json.dump(datos_json, f, ensure_ascii=False, indent=2)
-            continue
-            
-        # Guardar el JSON en cola0
-        nombre_json = pdf.with_suffix(".json").name
-        ruta_json = CARPETA_COLA0 / nombre_json
-        
         try:
+            # Verificar si Groq lo marcó como INVALIDO
+            if datos_json.get("estado_revision") == "INVALIDO":
+                print("    [!] Documento INVALIDO detectado por IA. Moviendo a Otros DTEs.")
+                from src.config import BASE_DIR
+                CARPETA_OTROS = BASE_DIR / 'data' / '09_otros_dtes'
+                shutil.move(str(pdf), str(CARPETA_OTROS / pdf.name))
+                ruta_json = CARPETA_OTROS / pdf.with_suffix(".json").name
+                with open(ruta_json, 'w', encoding='utf-8') as f:
+                    json.dump(datos_json, f, ensure_ascii=False, indent=2)
+                continue
+                
+            # Validación final por si se omitió INVALIDO pero faltan datos
+            identificacion = datos_json.get("identificacion", {})
+            emisor = datos_json.get("emisor", {})
+            codigo_gen = identificacion.get("codigoGeneracion")
+            
+            if not codigo_gen:
+                print("    [!] Faltan UUID. Enviado a Revisión Manual.")
+                registrar_error(pdf.name, "No se encontró UUID en el texto extraído.")
+                shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
+                ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
+                with open(ruta_json, 'w', encoding='utf-8') as f:
+                    json.dump(datos_json, f, ensure_ascii=False, indent=2)
+                continue
+                
+            nombre_emisor = emisor.get("nombre", "")
+            if nombre_emisor in ["Extraido de PDF", "Forzar_Revision", "", None]:
+                print("    [!] Faltan proveedor. Enviado a Revisión Manual.")
+                registrar_error(pdf.name, "Proveedor desconocido.")
+                shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
+                ruta_json = CARPETA_REVISION / pdf.with_suffix(".json").name
+                with open(ruta_json, 'w', encoding='utf-8') as f:
+                    json.dump(datos_json, f, ensure_ascii=False, indent=2)
+                continue
+                
+            # Guardar el JSON en cola0
+            nombre_json = pdf.with_suffix(".json").name
+            ruta_json = CARPETA_COLA0 / nombre_json
+            
             with open(ruta_json, 'w', encoding='utf-8') as f:
                 json.dump(datos_json, f, ensure_ascii=False, indent=2)
             print(f"    [OK] Datos extraídos y enviados a cola0: {nombre_json}")
@@ -379,12 +384,16 @@ def procesar_cola():
                 # Manejar colisión de nombres
                 destino_pdf = CARPETA_RESPALDO / f"{pdf.stem}_{datetime.now().strftime('%H%M%S')}{pdf.suffix}"
             shutil.move(str(pdf), str(destino_pdf))
-            
+
         except Exception as e:
-            print(f"    [X] Error al guardar JSON: {e}")
-            registrar_error(pdf.name, f"Error al guardar JSON extraído: {traceback.format_exc()}")
-            shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
-            raise Exception("Error al guardar JSON extraído del PDF.")
+            print(f"    [X] Error fatal procesando el PDF {pdf.name}: {e}")
+            print(traceback.format_exc())
+            registrar_error(pdf.name, f"Error fatal: {e}")
+            try:
+                shutil.move(str(pdf), str(CARPETA_REVISION / pdf.name))
+            except:
+                pass
+            continue
 
         import time
         time.sleep(1.5)

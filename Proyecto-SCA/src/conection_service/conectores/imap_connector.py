@@ -40,13 +40,10 @@ class IMAPConnector(MailConnector):
 
     def listar_candidatos(self):
         candidatos = []
-        # Eliminado filtro por flagged=False, ahora traemos todos
         criterio = "ALL"
 
-        for msg in self._mailbox.fetch(criterio, mark_seen=False):
-            if not msg.attachments:
-                continue
-
+        # headers_only=True descarga solo asunto, remitente, uid, etc. (muy rápido)
+        for msg in self._mailbox.fetch(criterio, mark_seen=False, headers_only=True):
             message_id = msg.headers.get('message-id', [msg.uid])[0]
             if isinstance(message_id, bytes):
                 message_id = message_id.decode('utf-8', errors='ignore')
@@ -67,7 +64,7 @@ class IMAPConnector(MailConnector):
                     remitente=msg.from_,
                     asunto=msg.subject,
                     fecha=fecha_segura,
-                    adjuntos_raw=msg.attachments,
+                    adjuntos_raw=[], # Lo dejamos vacío, se descarga bajo demanda
                     message_id=message_id,
                 )
             )
@@ -75,8 +72,11 @@ class IMAPConnector(MailConnector):
 
     def obtener_adjuntos(self, mensaje: MensajeNormalizado):
         resultado = []
-        for adj in mensaje.adjuntos_raw:
-            resultado.append((adj.filename or "", adj.payload))
+        # Descargar el mensaje completo (cuerpo y adjuntos) solo para este UID
+        for msg in self._mailbox.fetch(f"{mensaje.id_interno}", mark_seen=False):
+            for adj in msg.attachments:
+                resultado.append((adj.filename or "", adj.payload))
+            break # Solo debería haber uno
         return resultado
 
     def marcar_procesado(self, mensaje: MensajeNormalizado):
