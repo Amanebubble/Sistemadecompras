@@ -32,7 +32,7 @@ def hilo_imap():
     while _corriendo:
         try:
             cuentas = cargar_cuentas()
-            print("[SEMAFORO:active][FASE:conection_service]")
+            # Eliminado print con FASE
             for config_cuenta in cuentas:
                 nombre_cuenta = config_cuenta.get("nombre", config_cuenta.get("usuario", "desconocido"))
                 try:
@@ -49,7 +49,7 @@ def hilo_imap():
 def hilo_enrutador():
     while _corriendo:
         try:
-            print("[SEMAFORO:active][FASE:filtro_service]")
+            # Eliminado print con FASE
             enrutador = Enrutador()
             enrutador.ejecutar()
             sleep_con_latido(5, "Enrutador")
@@ -60,7 +60,7 @@ def hilo_enrutador():
 def hilo_pdf():
     while _corriendo:
         try:
-            print("[SEMAFORO:active][FASE:conversor1_pdf]")
+            # Eliminado print con FASE
             extraer_pdfs()
             sleep_con_latido(5, "Conversor PDF")
         except Exception as e:
@@ -70,7 +70,7 @@ def hilo_pdf():
 def hilo_json():
     while _corriendo:
         try:
-            print("[SEMAFORO:active][FASE:conversor0_json]")
+            # Eliminado print con FASE
             estandarizador = Estandarizador()
             estandarizador.conexion = _inicializar_bd(str(estandarizador.ruta_bd))
             estandarizador.procesar_cola()
@@ -99,7 +99,7 @@ def hilo_reportes():
                 sleep_con_latido(30, "Generador Reportes")
                 continue
                 
-            print("[SEMAFORO:active][FASE:reportes_beta]")
+            print("[Reportes] Generando o actualizando Libro de Compras en Excel...")
             
             cursor.execute("SELECT DISTINCT cliente, ano, mes FROM libro_compras")
             combinaciones = cursor.fetchall()

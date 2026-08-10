@@ -132,12 +132,14 @@ class GestorDTE:
 
         for mensaje in candidatos:
             if bd.fue_procesado(nombre_cuenta, mensaje.message_id):
+                print(f"  [Conexión - {nombre_cuenta}] Correo '{mensaje.asunto[:30]}...' ya está procesado. Omitiendo.")
                 continue
                 
             revisados += 1
+            print(f"  [Conexión - {nombre_cuenta}] Evaluando correo nuevo: '{mensaje.asunto[:40]}...'")
 
             if not self._asunto_coincide(mensaje.asunto):
-                print(f"  [Omitido] Asunto no coincide: '{mensaje.asunto}'")
+                print(f"  [Conexión - {nombre_cuenta}] [Omitido] Asunto no coincide: '{mensaje.asunto}'")
                 bd.marcar_procesado(nombre_cuenta, mensaje.message_id)
                 continue
 

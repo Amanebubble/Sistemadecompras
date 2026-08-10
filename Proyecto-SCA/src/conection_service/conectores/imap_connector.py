@@ -30,9 +30,30 @@ class IMAPConnector(MailConnector):
         password = self.config["password"]  # ya resuelta por el router/main
         carpeta = self.config.get("carpeta", "INBOX")
 
+        # Para Gmail, intentar acceder a la carpeta Todos los correos por defecto
+        # si el usuario no especificó otra carpeta.
+        if "gmail.com" in servidor.lower() and carpeta == "INBOX":
+            try:
+                self._mailbox = MailBox(servidor, port=puerto, timeout=30).login(
+                    usuario, password, initial_folder="[Gmail]/Todos"
+                )
+                print(f"  [Conexión] Autodetectada carpeta '[Gmail]/Todos'")
+                return
+            except Exception:
+                try:
+                    self._mailbox = MailBox(servidor, port=puerto, timeout=30).login(
+                        usuario, password, initial_folder="[Gmail]/All Mail"
+                    )
+                    print(f"  [Conexión] Autodetectada carpeta '[Gmail]/All Mail'")
+                    return
+                except Exception:
+                    pass
+
+        # Fallback normal
         self._mailbox = MailBox(servidor, port=puerto, timeout=30).login(
             usuario, password, initial_folder=carpeta
         )
+        print(f"  [Conexión] Usando carpeta '{carpeta}'")
 
     def desconectar(self):
         if self._mailbox:
