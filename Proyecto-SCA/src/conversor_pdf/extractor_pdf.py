@@ -291,14 +291,9 @@ def extraer_con_groq(ruta_pdf: Path) -> dict:
 
 def procesar_cola():
     """Procesa todos los PDFs pendientes en cola1."""
-    print("=" * 60)
-    print("  CONVERSOR1-PDF: Extracción desde PDF")
-    print("=" * 60)
-
     pdfs = list(CARPETA_COLA1.glob("*.pdf"))
 
     if not pdfs:
-        print("  No hay PDFs en cola1/ para procesar.")
         return
 
     print(f"  Se encontraron {len(pdfs)} PDFs. Iniciando procesamiento...\n")
