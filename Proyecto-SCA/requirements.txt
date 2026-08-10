@@ -18,6 +18,9 @@ openpyxl
 imap-tools
 
 # 4. Descarga de Correos Gmail OAuth2 (conection-service)
+# 5. Dependencias para Nivel 4 de OCR Local (Rescate de PDFs)
+PyMuPDF
+rapidocr
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib

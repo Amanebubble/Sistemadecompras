@@ -15,6 +15,20 @@ import json
 import shutil
 import re
 
+# Auto-instalador de dependencias nuevas
+def _asegurar_dependencias():
+    try:
+        import fitz
+        import rapidocr
+    except ImportError:
+        print("\n[!] Detectadas nuevas dependencias (PyMuPDF, rapidocr) faltantes en este equipo.")
+        print("[!] Instalando automáticamente... (Esto puede tomar unos minutos la primera vez)")
+        req_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_path])
+        print("[*] Dependencias instaladas con éxito.\n")
+
+_asegurar_dependencias()
+
 # Configuración Dinámica de sys.path para Portabilidad Total
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 

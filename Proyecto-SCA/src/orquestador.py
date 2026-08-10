@@ -8,6 +8,20 @@ import sqlite3
 # Asegurar que la raíz del proyecto está en el PYTHONPATH
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Auto-instalador de dependencias nuevas
+def _asegurar_dependencias():
+    try:
+        import fitz
+        import rapidocr
+    except ImportError:
+        print("\n[!] Detectadas nuevas dependencias (PyMuPDF, rapidocr) faltantes en este equipo.")
+        print("[!] Instalando automáticamente... (Esto puede tomar unos minutos la primera vez)")
+        req_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "requirements.txt")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_path])
+        print("[*] Dependencias instaladas con éxito.\n")
+
+_asegurar_dependencias()
+
 from src.auditoria import registrar_error
 from src.conection_service.main import cargar_cuentas, cargar_settings, procesar_cuenta_con_reintentos
 from src.filtro_service.enrutador import Enrutador
