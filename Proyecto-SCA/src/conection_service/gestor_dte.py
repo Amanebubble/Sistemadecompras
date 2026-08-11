@@ -72,10 +72,10 @@ class GestorDTE:
         # Palabras clave globales maestras para buscar DTEs en cualquier cuenta.
         # Ya no dependemos de que el usuario lo escriba bien en cada cuenta.
         palabras_maestras = [
-            "dte", "documento electronico", "documento electrónico",
-            "documento tributario", "facturacion electronica", 
-            "facturación electrónica", "credito fiscal", "crédito fiscal",
-            "factura", "comprobante", "emisión", "emision", "adjunto", "envio"
+            "dte", "documento", "facturacion", "facturación", 
+            "credito fiscal", "crédito fiscal",
+            "factura", "comprobante", "emisión", "emision", "adjunto", "envio",
+            "autofacil"
         ]
         
         # Si el usuario agregó extra, las sumamos

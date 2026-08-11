@@ -564,8 +564,12 @@ def revision_descartar():
         pdf_name = data.get('pdf')
         if pdf_name:
             pdf_path_rev = CARPETA_REVISION / pdf_name
+            pdf_path_respaldo = CARPETA_RESPALDO / pdf_name
+            
             if pdf_path_rev.exists():
                 shutil.move(str(pdf_path_rev), str(CARPETA_OTROS_DTES / pdf_name))
+            elif pdf_path_respaldo.exists():
+                shutil.move(str(pdf_path_respaldo), str(CARPETA_OTROS_DTES / pdf_name))
         
         json_path = CARPETA_REVISION / f"{stem}.json"
         if json_path.exists():
