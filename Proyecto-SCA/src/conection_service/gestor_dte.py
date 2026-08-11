@@ -73,15 +73,21 @@ class GestorDTE:
         # Ya no dependemos de que el usuario lo escriba bien en cada cuenta.
         palabras_maestras = [
             "dte", "documento", "facturacion", "facturación", 
-            "credito fiscal", "crédito fiscal",
+            "credito fiscal", "crédito fiscal", "ccf",
             "factura", "comprobante", "emisión", "emision", "adjunto", "envio",
-            "autofacil"
+            "autofacil", "recibo", "nota"
         ]
         
         # Si el usuario agregó extra, las sumamos
         siempre_validas = set(palabras_maestras + (self.palabras_clave_asunto or []))
         
-        asunto_lower = (asunto or "").lower()
+        asunto_lower = (asunto or "").lower().strip()
+        
+        # Si el correo no tiene asunto en absoluto, lo dejamos pasar por seguridad
+        # ya que algunos sistemas automatizados mandan el DTE sin asunto.
+        if not asunto_lower:
+            return True
+            
         return any(p.lower() in asunto_lower for p in siempre_validas)
 
     def _es_json_dte_valido(self, contenido_bytes):
