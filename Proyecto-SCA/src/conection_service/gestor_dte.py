@@ -140,24 +140,27 @@ class GestorDTE:
 
         candidatos = conector.listar_candidatos()
 
-        for mensaje in candidatos:
+        for i, mensaje in enumerate(candidatos):
+            if i % 10 == 0:
+                print(f"  [Pulso] Procesando {i} de {len(candidatos)} en {nombre_cuenta}...", flush=True)
+
             if bd.fue_procesado(nombre_cuenta, mensaje.message_id):
-                print(f"  [Conexión - {nombre_cuenta}] Correo '{mensaje.asunto[:30]}...' ya está procesado. Omitiendo.")
+                print(f"  [Conexión - {nombre_cuenta}] Correo '{mensaje.asunto[:30]}...' ya está procesado. Omitiendo.", flush=True)
                 continue
                 
             revisados += 1
-            print(f"  [Conexión - {nombre_cuenta}] Evaluando correo nuevo: '{mensaje.asunto[:40]}...'")
+            print(f"  [Conexión - {nombre_cuenta}] Evaluando correo nuevo: '{mensaje.asunto[:40]}...'", flush=True)
 
             if not self._asunto_coincide(mensaje.asunto):
-                print(f"  [Conexión - {nombre_cuenta}] [Omitido] Asunto no coincide: '{mensaje.asunto}'")
+                print(f"  [Conexión - {nombre_cuenta}] [Omitido] Asunto no coincide: '{mensaje.asunto}'", flush=True)
                 bd.marcar_procesado(nombre_cuenta, mensaje.message_id)
                 continue
 
             adjuntos = conector.obtener_adjuntos(mensaje)
             if not adjuntos:
-                print(f"  [!] No se encontraron adjuntos en este correo a pesar de haberlo descargado.")
+                print(f"  [!] No se encontraron adjuntos en este correo a pesar de haberlo descargado.", flush=True)
             else:
-                print(f"  [+] Encontrados {len(adjuntos)} adjuntos: {[f[0] for f in adjuntos]}")
+                print(f"  [+] Encontrados {len(adjuntos)} adjuntos: {[f[0] for f in adjuntos]}", flush=True)
                 
             encontro_algo = False
 

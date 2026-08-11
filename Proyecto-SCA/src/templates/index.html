@@ -1577,15 +1577,15 @@
                 const data = await res.json();
                 if (data && data.activo) {
                     isEngineRunning = true;
-                    if(document.getElementById('btnStartEngine')) document.getElementById('btnStartEngine').disabled = true;
+                    if(document.getElementById('btnRunAll')) document.getElementById('btnRunAll').disabled = true;
                     if(document.getElementById('btnStopEngine')) document.getElementById('btnStopEngine').disabled = false;
                     
-                    const startIcon = document.getElementById('startIcon');
+                    const startIcon = document.getElementById('btnIcon');
                     if(startIcon) {
                         startIcon.classList.remove('fa-play');
                         startIcon.classList.add('fa-spinner', 'fa-spin');
                     }
-                    const startText = document.getElementById('startText');
+                    const startText = document.getElementById('btnText');
                     if(startText) {
                         startText.textContent = "Motor Corriendo...";
                     }
