@@ -80,15 +80,15 @@ class IMAPConnector(MailConnector):
         import datetime
         from imap_tools import AND
         
-        # Filtro global de fecha: 1 de diciembre de 2025 en adelante
-        fecha_limite = datetime.date(2025, 12, 1)
+        # Filtro global de fecha: 1 de junio de 2026 en adelante
+        fecha_limite = datetime.date(2026, 6, 1)
         
         if ultimo_uid > 1:
             criterio_busqueda = AND(uid=f"{ultimo_uid}:*", date_gte=fecha_limite)
-            print(f"  [Conexión] Sincronización Incremental (UID {ultimo_uid} en adelante, desde Dic 2025)...")
+            print(f"  [Conexión] Sincronización Incremental (UID {ultimo_uid} en adelante, desde Jun 2026)...")
         else:
             criterio_busqueda = AND(date_gte=fecha_limite)
-            print(f"  [Conexión] Sincronización Histórica detectada (limitado desde Dic 2025).")
+            print(f"  [Conexión] Sincronización Histórica detectada (limitado desde Jun 2026).")
 
         print(f"  [Conexión] Obteniendo lista de UIDs desde el servidor IMAP...")
         
