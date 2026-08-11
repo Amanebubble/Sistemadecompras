@@ -774,7 +774,10 @@
                             </div>
                         </div>
 
-                        <div class="pt-4 flex justify-end">
+                        <div class="pt-4 flex justify-between">
+                            <button type="button" onclick="discardCurrentRevisionCase()" class="bg-gray-700/80 hover:bg-red-500/80 text-white font-medium py-3 px-6 rounded-lg transition-all flex items-center border border-gray-600 hover:border-red-500/50">
+                                <i class="fa-solid fa-trash-can mr-2"></i> Descartar a Otros
+                            </button>
                             <button type="submit" id="btnReinject" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 px-8 rounded-lg shadow-[0_0_15px_rgba(20,184,166,0.4)] transition-all flex items-center">
                                 <i class="fa-solid fa-share-from-square mr-2"></i> Generar y Reinsertar
                             </button>
@@ -1203,6 +1206,32 @@
             if (currentRevisionIndex < revisionCases.length - 1) {
                 currentRevisionIndex++;
                 loadCase(currentRevisionIndex);
+            }
+        }
+        async function discardCurrentRevisionCase() {
+            const caso = revisionCases[currentRevisionIndex];
+            if (!caso) return;
+            
+            try {
+                const res = await fetch('/api/revision/descartar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stem: caso.stem, pdf: caso.pdf })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    revisionCases.splice(currentRevisionIndex, 1);
+                    if (currentRevisionIndex >= revisionCases.length) {
+                        currentRevisionIndex = Math.max(0, revisionCases.length - 1);
+                    }
+                    loadCase(currentRevisionIndex);
+                    updateStats();
+                } else {
+                    alert("Error descartando caso: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error de conexión");
             }
         }
 
