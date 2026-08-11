@@ -166,6 +166,38 @@ class Enrutador:
             print(f"[Enrutador] Emparejados y respaldados {self.contadores['respaldo']} PDFs.")
         return pdfs_huerfanos
 
+    def _asegurar_pdf_crudo(self, json_path: Path, destino: Path):
+        """Si un JSON va a revisión manual y no tiene PDF, crea uno crudo con su texto."""
+        pdf_name = json_path.stem + ".pdf"
+        pdf_path = destino / pdf_name
+        
+        if pdf_path.exists(): return
+            
+        identificador = self._extraer_identificador(json_path.name)
+        if identificador and identificador != "NONE":
+            if list(self.carpeta_respaldo.glob(f"*{identificador}*.pdf")):
+                return
+
+        try:
+            import fitz
+            with open(json_path, 'r', encoding='utf-8-sig', errors='replace') as f:
+                texto = f.read()
+            doc = fitz.open()
+            page = doc.new_page()
+            y = 50
+            for line in texto.split('\n'):
+                chunks = [line[i:i+80] for i in range(0, max(1, len(line)), 80)]
+                for chunk in chunks:
+                    page.insert_text((50, y), chunk, fontsize=10)
+                    y += 12
+                    if y > 800:
+                        page = doc.new_page()
+                        y = 50
+            doc.save(str(pdf_path))
+            doc.close()
+        except Exception as e:
+            print(f"[Enrutador] Error creando PDF crudo: {e}")
+
     def _clasificar_archivos(self, pdfs_huerfanos: list):
         """Clasifica JSONs restantes y PDFs huérfanos."""
         # Procesar JSONs
@@ -178,13 +210,17 @@ class Enrutador:
                 with open(j, 'r', encoding='utf-8-sig') as f:
                     datos = json.load(f)
             except Exception:
+                destino_json = self.carpeta_error / j.name
                 self._mover(j, self.carpeta_error)
+                self._asegurar_pdf_crudo(destino_json, self.carpeta_error)
                 self.contadores["errores"] += 1
                 continue
                 
             # Validar campos esperados
             if not all(campo in datos for campo in self.campos_dte_esperados):
+                destino_json = self.carpeta_invalido / j.name
                 self._mover(j, self.carpeta_invalido)
+                self._asegurar_pdf_crudo(destino_json, self.carpeta_invalido)
                 self.contadores["invalidos"] += 1
                 continue
                 
@@ -201,7 +237,9 @@ class Enrutador:
                         tipo_dte = match.group(1)
             
             if tipo_dte and tipo_dte not in self.tipos_dte_validos:
+                destino_json = self.carpeta_otros / j.name
                 self._mover(j, self.carpeta_otros)
+                self._asegurar_pdf_crudo(destino_json, self.carpeta_otros)
                 self.contadores["otros"] += 1
                 print(f"[Enrutador] Archivo '{j.name}' movido a Otros DTEs (No deducible)")
                 

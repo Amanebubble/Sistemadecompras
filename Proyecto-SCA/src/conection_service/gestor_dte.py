@@ -86,8 +86,12 @@ class GestorDTE:
 
     def _es_json_dte_valido(self, contenido_bytes):
         try:
-            data = json.loads(contenido_bytes.decode("utf-8-sig"))
-        except (UnicodeDecodeError, json.JSONDecodeError) as e:
+            try:
+                texto = contenido_bytes.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                texto = contenido_bytes.decode("latin-1")
+            data = json.loads(texto)
+        except json.JSONDecodeError as e:
             print(f"  [!] Archivo JSON rechazado por error de decodificación: {e}")
             return False, None
         
