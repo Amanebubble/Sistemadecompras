@@ -784,6 +784,54 @@
             </div>
         </div>
     </div>
+    <!-- Estación de Otros DTEs -->
+    <div id="otrosDtesStation" class="fixed inset-0 z-50 bg-dark-900/95 backdrop-blur-md hidden flex-col">
+        <header class="flex flex-col md:flex-row justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
+            <h2 class="text-xl font-bold text-white flex items-center mb-4 md:mb-0">
+                <i class="fa-solid fa-folder-open text-brand-400 mr-2"></i> Otros DTEs
+            </h2>
+            
+            <div class="flex items-center space-x-3 bg-gray-800/50 rounded-lg p-1.5 border border-gray-700/50">
+                <button onclick="prevOtrosCase()" class="px-4 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-all flex items-center">
+                    <i class="fa-solid fa-chevron-left mr-2"></i> Anterior
+                </button>
+                <div class="px-3 py-1 bg-gray-900 rounded border border-gray-700 flex items-center justify-center min-w-[120px]">
+                    <span id="otrosDtesCounter" class="text-brand-400 font-mono text-sm font-semibold">Cargando...</span>
+                </div>
+                <button onclick="nextOtrosCase()" class="px-4 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-all flex items-center">
+                    Siguiente <i class="fa-solid fa-chevron-right ml-2"></i>
+                </button>
+            </div>
+            
+            <div class="mt-4 md:mt-0 flex items-center">
+                <button onclick="closeOtrosDtesStation()" class="text-gray-300 hover:text-white px-4 py-2 rounded-lg bg-gray-800 hover:bg-red-500/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all border border-gray-700 flex items-center">
+                    <i class="fa-solid fa-xmark mr-2"></i> Volver al Dashboard
+                </button>
+            </div>
+        </header>
+        
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Lado Izquierdo: PDF Viewer -->
+            <div class="w-1/2 border-r border-gray-800 bg-black flex flex-col relative">
+                <div id="otrosPdfEmpty" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10 hidden">
+                    <p class="text-gray-400 text-lg"><i class="fa-solid fa-file-circle-xmark mr-2 text-xl"></i>PDF no disponible</p>
+                </div>
+                <iframe id="otrosPdfViewer" class="w-full h-full" src=""></iframe>
+            </div>
+            
+            <!-- Lado Derecho: Descarga -->
+            <div class="w-1/2 bg-gray-900/30 flex items-center justify-center p-6">
+                <div class="text-center">
+                    <h3 class="text-2xl font-semibold text-brand-300 mb-4">Documento Rechazado / Otros</h3>
+                    <p class="text-gray-400 mb-8 max-w-md mx-auto">Este documento no cumplió con los criterios de compras o fue descartado manualmente. Puedes descargarlo para tus registros.</p>
+                    <a id="btnDownloadOtros" href="#" target="_blank" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold py-4 px-8 rounded-xl shadow-[0_0_20px_rgba(45,212,191,0.3)] transition-all flex items-center justify-center space-x-3 inline-flex">
+                        <i class="fa-solid fa-download text-xl"></i>
+                        <span>Descargar PDF</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script>
@@ -1556,13 +1604,11 @@
                     if (el) el.innerText = val;
                 };
 
-                updateText('stat-cola0', data.cola0 || 0);
-                updateText('stat-cola1', data.cola1 || 0);
-                updateText('stat-procesados', data.procesados || 0);
-                updateText('stat-errores', data.errores || 0);
-                updateText('stat-historico', data.historico || 0);
+                updateText('stat-cola0', data.cola0_count || 0);
+                updateText('stat-cola1', data.cola1_count || 0);
+                updateText('stat-procesados', data.procesados_count || 0);
                 updateText('sidebar-stat-revision', data.revision_count || 0);
-                updateText('count_otros_dtes', data.otros_dtes || 0);
+                updateText('count_otros_dtes', data.otros_dtes_count || 0);
                 
             } catch (e) {
                 console.error(e);
@@ -1598,14 +1644,13 @@
         // ==========================================
         // Visor de Otros DTEs
         // ==========================================
-        let currentOtrosDtesList = [];
-        let currentOtrosDteFilename = null;
-        let currentOtrosTab = 'pdf';
+        let otrosDtesCases = [];
+        let currentOtrosDtesIndex = 0;
 
-        function openOtrosDtesStation() {
+        async function openOtrosDtesStation() {
             document.getElementById('otrosDtesStation').classList.remove('hidden');
             document.getElementById('otrosDtesStation').classList.add('flex');
-            loadOtrosDtesList();
+            await loadOtrosDtesList();
         }
 
         function closeOtrosDtesStation() {
@@ -1613,137 +1658,65 @@
             document.getElementById('otrosDtesStation').classList.remove('flex');
             document.getElementById('otrosPdfViewer').src = '';
             document.getElementById('otrosPdfViewer').classList.add('hidden');
-            document.getElementById('otrosJsonViewer').classList.add('hidden');
             document.getElementById('otrosPdfEmpty').classList.remove('hidden');
-            document.getElementById('btnDownloadOtros').classList.add('hidden');
-            document.getElementById('otrosDtesTabs').classList.add('hidden');
-            currentOtrosDteFilename = null;
+            document.getElementById('btnDownloadOtros').href = '#';
         }
 
         async function loadOtrosDtesList() {
             try {
                 const res = await fetch('/api/otros_dtes/list');
                 const data = await res.json();
-                currentOtrosDtesList = data.archivos || [];
-                
-                document.getElementById('otrosDtesCountText').textContent = 
-                    `${currentOtrosDtesList.length} archivo${currentOtrosDtesList.length !== 1 ? 's' : ''}`;
-                    
-                renderOtrosDtesList();
+                otrosDtesCases = data.casos || [];
+                currentOtrosDtesIndex = 0;
+                renderOtrosCase();
             } catch (error) {
                 console.error("Error loading otros DTEs:", error);
             }
         }
 
-        function renderOtrosDtesList() {
-            const container = document.getElementById('otrosDtesList');
-            container.innerHTML = '';
-            
-            if (currentOtrosDtesList.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center">
-                        <i class="fa-solid fa-check-circle text-3xl text-green-500 mb-3 opacity-50"></i>
-                        <p class="text-sm text-gray-500">No hay documentos inválidos.</p>
-                    </div>`;
+        function renderOtrosCase() {
+            const counter = document.getElementById('otrosDtesCounter');
+            const iframe = document.getElementById('otrosPdfViewer');
+            const emptyState = document.getElementById('otrosPdfEmpty');
+            const btnDownload = document.getElementById('btnDownloadOtros');
+
+            if (otrosDtesCases.length === 0) {
+                counter.textContent = "0 / 0";
+                iframe.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                btnDownload.href = '#';
                 return;
             }
-            
-            currentOtrosDtesList.forEach(file => {
-                const isSelected = file.name === currentOtrosDteFilename;
-                const div = document.createElement('div');
-                div.className = `p-3 rounded-lg cursor-pointer transition-colors border ${isSelected ? 'bg-brand-500/10 border-brand-500/30' : 'bg-dark-800 border-gray-800 hover:border-gray-600'}`;
-                
-                const sizeKb = (file.size / 1024).toFixed(1);
-                
-                div.innerHTML = `
-                    <div class="flex items-start">
-                        <i class="fa-regular fa-file-pdf mt-1 mr-3 ${isSelected ? 'text-brand-400' : 'text-gray-500'}"></i>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-300'} truncate" title="${file.name}">
-                                ${file.name}
-                            </p>
-                            <div class="flex items-center justify-between mt-1">
-                                <span class="text-xs text-gray-500">${sizeKb} KB</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                div.onclick = () => selectOtrosDte(file.name);
-                container.appendChild(div);
-            });
-        }
 
-        function switchOtrosDtesTab(tab) {
-            currentOtrosTab = tab;
-            
-            const btnPdf = document.getElementById('tabOtrosPdf');
-            const btnJson = document.getElementById('tabOtrosJson');
-            const viewerPdf = document.getElementById('otrosPdfViewer');
-            const viewerJson = document.getElementById('otrosJsonViewer');
-            
-            if (tab === 'pdf') {
-                btnPdf.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-brand-500/20 text-brand-400 border border-brand-500/30";
-                btnJson.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-transparent text-gray-400 hover:text-white hover:bg-gray-800 border border-transparent";
-                viewerJson.classList.add('hidden');
-                viewerPdf.classList.remove('hidden');
+            counter.textContent = `${currentOtrosDtesIndex + 1} / ${otrosDtesCases.length}`;
+            const currentCase = otrosDtesCases[currentOtrosDtesIndex];
+
+            if (currentCase.pdf) {
+                iframe.src = `/api/otros_dtes/file/${encodeURIComponent(currentCase.pdf)}`;
+                iframe.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                btnDownload.href = `/api/otros_dtes/download/${encodeURIComponent(currentCase.pdf)}`;
             } else {
-                btnJson.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-brand-500/20 text-brand-400 border border-brand-500/30";
-                btnPdf.className = "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-transparent text-gray-400 hover:text-white hover:bg-gray-800 border border-transparent";
-                viewerPdf.classList.add('hidden');
-                viewerJson.classList.remove('hidden');
-                
-                // Fetch and display JSON content
-                if (currentOtrosDteFilename) {
-                    const jsonName = currentOtrosDteFilename.replace('.pdf', '.json');
-                    fetch(`/api/otros_dtes/file/${encodeURIComponent(jsonName)}`)
-                        .then(res => res.ok ? res.text() : 'No se encontró archivo JSON.')
-                        .then(text => {
-                            viewerJson.textContent = text;
-                        })
-                        .catch(err => {
-                            viewerJson.textContent = 'Error al cargar JSON: ' + err;
-                        });
-                }
-            }
-        }
-
-        function selectOtrosDte(filename) {
-            currentOtrosDteFilename = filename;
-            renderOtrosDtesList();
-            
-            document.getElementById('otrosPdfEmpty').classList.add('hidden');
-            document.getElementById('otrosDtesTabs').classList.remove('hidden');
-            document.getElementById('btnDownloadOtros').classList.remove('hidden');
-            
-            const iframe = document.getElementById('otrosPdfViewer');
-            const loader = document.getElementById('otrosPdfLoading');
-            
-            // Si está en tab pdf cargamos iframe
-            iframe.src = `/api/otros_dtes/file/${encodeURIComponent(filename)}`;
-            
-            if (currentOtrosTab === 'pdf') {
-                loader.classList.remove('hidden');
+                iframe.src = '';
                 iframe.classList.add('hidden');
-                iframe.onload = () => {
-                    loader.classList.add('hidden');
-                    iframe.classList.remove('hidden');
-                };
-            } else {
-                switchOtrosDtesTab('json');
+                emptyState.classList.remove('hidden');
+                btnDownload.href = '#';
             }
         }
 
-        function downloadCurrentOtrosDte() {
-            if (!currentOtrosDteFilename) return;
-            let filename = currentOtrosDteFilename;
-            if (currentOtrosTab === 'json') {
-                filename = filename.replace('.pdf', '.json');
+        function prevOtrosCase() {
+            if (currentOtrosDtesIndex > 0) {
+                currentOtrosDtesIndex--;
+                renderOtrosCase();
             }
-            const url = `/api/otros_dtes/download/${encodeURIComponent(filename)}`;
-            window.location.href = url;
         }
-        
+
+        function nextOtrosCase() {
+            if (currentOtrosDtesIndex < otrosDtesCases.length - 1) {
+                currentOtrosDtesIndex++;
+                renderOtrosCase();
+            }
+        }
     </script>
 </body>
 </html>

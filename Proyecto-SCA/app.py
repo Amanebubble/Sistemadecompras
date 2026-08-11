@@ -34,7 +34,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.config import (
     CARPETA_DESCARGAS, CARPETA_COLA1, CARPETA_COLA0, CARPETA_PROCESADOS, 
-    CARPETA_RESPALDO, CARPETA_REVISION, CARPETA_ERRORES, CARPETA_REPORTES, CARPETA_OTROS_DTES,
+    CARPETA_RESPALDO, CARPETA_REVISION, CARPETA_REPORTES, CARPETA_OTROS_DTES,
     ARCHIVO_CUENTAS, CREDENTIALS_DIR, RAIZ_PROYECTO, SRC_DIR
 )
 
@@ -54,16 +54,23 @@ def index():
 @app.route('/api/stats')
 def get_stats():
     def count_files(dir_path):
-        return len([f for f in dir_path.glob("*") if f.is_file()]) if dir_path.exists() else 0
+        if not dir_path.exists(): return 0
+        return len([f for f in dir_path.glob("*") if f.is_file()])
+
+    def count_unique_cases(dir_path):
+        if not dir_path.exists(): return 0
+        # Cuenta la cantidad de casos únicos ignorando la extensión (asumiendo que PDF y JSON se llaman igual)
+        stems = set(f.stem for f in dir_path.glob("*") if f.is_file())
+        return len(stems)
 
     return jsonify({
         "descarga_count": count_files(CARPETA_DESCARGAS),
         "cola1_count": count_files(CARPETA_COLA1),
         "cola0_count": count_files(CARPETA_COLA0),
-        "procesados_count": count_files(CARPETA_PROCESADOS),
+        "procesados_count": count_unique_cases(CARPETA_PROCESADOS),
         "respaldo_count": count_files(CARPETA_RESPALDO),
-        "revision_count": count_files(CARPETA_REVISION),
-        "otros_dtes_count": count_files(CARPETA_OTROS_DTES),
+        "revision_count": count_unique_cases(CARPETA_REVISION),
+        "otros_dtes_count": count_unique_cases(CARPETA_OTROS_DTES)
     })
 
 
@@ -578,6 +585,42 @@ def revision_descartar():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+# ==========================================
+# API Otros DTEs
+# ==========================================
+@app.route('/api/otros_dtes/list')
+def otros_dtes_list():
+    if not CARPETA_OTROS_DTES.exists():
+        return jsonify({"casos": []})
+        
+    pdfs = list(CARPETA_OTROS_DTES.glob('*.pdf'))
+    patron_uuid = re.compile(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
+    casos_dict = {}
+    
+    for p in pdfs:
+        if not p.is_file(): continue
+        stem = p.stem
+        match = patron_uuid.search(stem)
+        uuid = match.group(0).upper() if match else stem.upper()
+        casos_dict[stem] = {
+            "stem": stem,
+            "pdf": p.name
+        }
+            
+    return jsonify({"casos": list(casos_dict.values())})
+
+@app.route('/api/otros_dtes/file/<path:filename>')
+def otros_dtes_file(filename):
+    if (CARPETA_OTROS_DTES / filename).exists():
+        return send_from_directory(str(CARPETA_OTROS_DTES), filename)
+    return "File not found", 404
+
+@app.route('/api/otros_dtes/download/<path:filename>')
+def otros_dtes_download(filename):
+    if (CARPETA_OTROS_DTES / filename).exists():
+        return send_from_directory(str(CARPETA_OTROS_DTES), filename, as_attachment=True)
+    return "File not found", 404
 
 
 @app.route('/api/shutdown', methods=['POST', 'GET'])

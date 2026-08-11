@@ -20,14 +20,13 @@ CARPETA_COLA0        = DATA_DIR / "03_cola0_json"
 CARPETA_PROCESADOS   = DATA_DIR / "04_procesados"
 CARPETA_RESPALDO     = DATA_DIR / "05_respaldo_pdf"
 CARPETA_REVISION     = DATA_DIR / "06_revision"
-CARPETA_ERRORES      = DATA_DIR / "07_errores"
 CARPETA_BASES_DATOS  = DATA_DIR / "bases_de_datos"
 
 # ─── Asegurar que las carpetas existan ──────────────────────────────────────
 for carpeta in [
     CARPETA_DESCARGAS, CARPETA_COLA1, CARPETA_COLA0,
     CARPETA_PROCESADOS, CARPETA_RESPALDO, CARPETA_REVISION,
-    CARPETA_ERRORES, CARPETA_BASES_DATOS
+    CARPETA_BASES_DATOS
 ]:
     carpeta.mkdir(parents=True, exist_ok=True)
 
@@ -38,8 +37,8 @@ RUTA_BD_CORREOS = CARPETA_BASES_DATOS / "correos_procesados.db"
 RUTA_BD_DIRECTORIO = CARPETA_BASES_DATOS / "directorio.db"
 
 # Logs globales
-RUTA_LOG_SISTEMA = CARPETA_ERRORES / "sistema.log"
-RUTA_LOG_CORREOS = CARPETA_ERRORES / "log_correos.csv"
+RUTA_LOG_SISTEMA = CARPETA_BASES_DATOS / "sistema.log"
+RUTA_LOG_CORREOS = CARPETA_BASES_DATOS / "log_correos.csv"
 
 # ─── Configuración Interna de Servicios ─────────────────────────────────────
 SRC_DIR = RAIZ_PROYECTO / "src"
@@ -56,10 +55,10 @@ FILTRO_CONFIG = {
     "carpeta_cola0": CARPETA_COLA0,
     "carpeta_cola1": CARPETA_COLA1,
     "carpeta_respaldo": CARPETA_RESPALDO,
-    "carpeta_invalido": CARPETA_ERRORES,
-    "carpeta_error": CARPETA_ERRORES,
-    "carpeta_duplicados": CARPETA_ERRORES,
-    "carpeta_otros": CARPETA_ERRORES,
+    "carpeta_invalido": CARPETA_REVISION,
+    "carpeta_error": CARPETA_REVISION,
+    "carpeta_duplicados": CARPETA_REVISION,
+    "carpeta_otros": CARPETA_REVISION,
     "ruta_bd": RUTA_BD_CONTROL,
     "patron_uuid": r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}",
     "campos_dte_esperados": ["identificacion", "emisor", "receptor"],
