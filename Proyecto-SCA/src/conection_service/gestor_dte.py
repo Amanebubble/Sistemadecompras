@@ -154,6 +154,11 @@ class GestorDTE:
                 continue
 
             adjuntos = conector.obtener_adjuntos(mensaje)
+            if not adjuntos:
+                print(f"  [!] No se encontraron adjuntos en este correo a pesar de haberlo descargado.")
+            else:
+                print(f"  [+] Encontrados {len(adjuntos)} adjuntos: {[f[0] for f in adjuntos]}")
+                
             encontro_algo = False
 
             # -- Pasada previa: buscar codigoGeneracion en JSON, o lectura ligera en PDF --

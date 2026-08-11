@@ -174,10 +174,11 @@ class IMAPConnector(MailConnector):
 
     def obtener_adjuntos(self, mensaje: MensajeNormalizado):
         resultado = []
+        from imap_tools import AND
         # Descargar el mensaje completo (cuerpo y adjuntos) solo para este UID
-        for msg in self._mailbox.fetch(f"{mensaje.id_interno}", mark_seen=False):
+        for msg in self._mailbox.fetch(AND(uid=str(mensaje.id_interno)), mark_seen=False):
             for adj in msg.attachments:
-                resultado.append((adj.filename or "", adj.payload))
+                resultado.append((adj.filename or "sin_nombre", adj.payload))
             break # Solo debería haber uno
         return resultado
 
