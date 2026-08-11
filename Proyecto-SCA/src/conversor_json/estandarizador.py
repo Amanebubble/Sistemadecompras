@@ -107,7 +107,11 @@ class Estandarizador:
         if identificador:
             partes = nombre_archivo.split(f"_{identificador}_")
             if len(partes) > 1:
-                return partes[0]
+                import re
+                nombre_bruto = partes[0]
+                # Limpiar el "_UIDxxx" que inyectamos en gestor_dte.py
+                nombre_limpio = re.sub(r'_UID\d+$', '', nombre_bruto)
+                return nombre_limpio
         return nombre_archivo.split('_')[0]
 
     @staticmethod
